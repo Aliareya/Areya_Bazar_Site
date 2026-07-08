@@ -1,11 +1,12 @@
 import React from 'react'
-import { useTranslation } from 'react-i18next';
+import AppLayout from './AppLayout'
+import { BrowserRouter } from 'react-router-dom'
 
 function App() {
-  const { t } = useTranslation('common');
-  console.log(t('save'))
   return (
-    <div>{t('save')}</div>
+    <BrowserRouter>
+      <AppLayout />
+    </BrowserRouter>
   )
 }
 
