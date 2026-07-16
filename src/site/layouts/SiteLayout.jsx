@@ -3,6 +3,7 @@ import Topbar from './Topbar'
 import useLangStore from '../../stores/LangStore'
 import Header from './Header';
 import { useTranslation } from 'react-i18next';
+import Footer from './Footer';
 
 function SiteLayout() {
   const {language , changeLanguage} = useLangStore();
@@ -16,7 +17,7 @@ function SiteLayout() {
 
       <span onClick={()=>changeLanguage('fa')}>fa</span>
       <span onClick={()=>changeLanguage('en')}>en</span>
-
+<Footer/>
     </div>
   )
 }

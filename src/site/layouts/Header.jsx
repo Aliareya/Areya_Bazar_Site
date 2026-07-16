@@ -17,7 +17,7 @@ function Header() {
     const [is_login , setIsLogin] = useState(true);
 
     return (
-        <header className="w-full h-[70px] flex justify-between items-center bg-white shadow-md xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3">
+        <header className="w-full sticky top-0 h-[70px] flex justify-between items-center bg-white shadow-md xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3">
             <div className="">
                 <img className="w-auto xl:h-26 md:h-24 max-md:h-24 max-sm:h-20 lg:h-[85px] object-contain" src={logo} alt="" />
             </div>
