@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 import ali from "../../../assets/images/ali.png";
 import { useNavigate } from "react-router-dom";
 
-function MobileMunuIcon() {
+function MobileMunuIcon({is_login}) {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const mobileref = useRef();
@@ -62,7 +62,7 @@ function MobileMunuIcon() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const handleProfileToggle = () => {
+  const handleProfileToggle = ({is_login}) => {
     setProfileOpen(!profileOpen);
   };
 
@@ -70,7 +70,6 @@ function MobileMunuIcon() {
     setOpen(!open);
   };
 
-  const is_login = true;
 
   return (
     <div className="relative">

@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 // import { useLanguageStore } from "../../../store/LanguageStore";
 import { useNavigate } from "react-router-dom";
 
-function ProfileIcon() {
+function ProfileIcon({is_login}) {
   const navigate = useNavigate();
   const [sss, content] = useState();
   const usermenu = [
@@ -37,8 +37,6 @@ function ProfileIcon() {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
-  const isLoggedIn = true; 
-
   const user = {
     name: "Alireza",
     email: "alireza@gmail.com",
@@ -54,7 +52,7 @@ function ProfileIcon() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (!isLoggedIn) {
+  if (!is_login) {
     return (
       <div className="flex items-center max-sm:hidden gap-2 ml-2 ">
         <button onClick={()=>navigate('/login')} className="px-4 py-2 text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200">

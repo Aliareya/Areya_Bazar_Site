@@ -4,6 +4,7 @@ import Search from "../components/ui/Serach";
 import LanguageIcon from "../components/ui/LanguageIcon";
 import ProfileIcon from "../components/ui/ProfileIcon";
 import MobileMunuIcon from "../components/ui/MobileMunuIcon";
+import { useState } from "react";
 
 function Header() {
     const headerMenu = [
@@ -13,7 +14,7 @@ function Header() {
         { label: "Contact", url: "/contact" },
     ];
 
-    const is_login = true;
+    const [is_login , setIsLogin] = useState(true);
 
     return (
         <header className="w-full h-[70px] flex justify-between items-center bg-white shadow-md xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3">
@@ -45,10 +46,10 @@ function Header() {
                     <LanguageIcon />
                 </div>
                 <div className="">
-                    <ProfileIcon />
+                    <ProfileIcon is_login={is_login}/>
                 </div>
                 <div className="lg:hidden ">
-                    <MobileMunuIcon />
+                    <MobileMunuIcon is_login={is_login}/>
                 </div>
             </div>
 
