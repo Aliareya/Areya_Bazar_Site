@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { Icon } from "@iconify/react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate()
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+
+  const {t} = useTranslation('auth');
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,11 +77,11 @@ export default function Login() {
         <div className="w-full lg:w-1/2 lg:p-8 md:p-6 max-md:p-5 p-3">
 
           <h2 className="text-2xl font-bold text-center text-[#1f5138] mb-2">
-            Welcome Back
+            {t('welcomeBack')}
           </h2>
 
           <p className="text-center text-gray-500 text-sm mb-4">
-            Login to continue buying or selling
+            {t('loginSubtitle')}
           </p>
 
           {/* ERROR */}
@@ -92,7 +97,7 @@ export default function Login() {
             <input
               type="email"
               name="email"
-              placeholder="Email"
+              placeholder={t('email')}
               value={form.email}
               onChange={handleChange}
               className="w-full border rounded-lg px-4 py-2"
@@ -103,7 +108,7 @@ export default function Login() {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                placeholder="Password"
+                placeholder={t('password')}
                 value={form.password}
                 onChange={handleChange}
                 className="w-full border rounded-lg px-4 py-2"
@@ -122,14 +127,14 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-[#1f5138] text-white py-2 rounded-lg"
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Logging in..." : `${t('login')}` } 
             </button>
           </form>
 
           {/* DIVIDER */}
           <div className="flex items-center my-4">
             <hr className="flex-1 border-gray-300" />
-            <span className="px-3 text-gray-400 text-sm">OR</span>
+            <span className="px-3 text-gray-400 text-sm">{t('or')}</span>
             <hr className="flex-1 border-gray-300" />
           </div>
 
@@ -142,7 +147,7 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
               <Icon icon="logos:google-icon" />
-              Google
+              {t('google')}
             </button>
 
             <button
@@ -151,7 +156,7 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
               <Icon icon="mdi:github" />
-              GitHub
+               {t('github')}
             </button>
 
             <button
@@ -160,15 +165,15 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
               <Icon icon="mdi:facebook" className="text-blue-600" />
-              Facebook
+               {t('facebook')}
             </button>
           </div>
 
           {/* FOOTER */}
           <p className="text-center text-sm text-gray-500 mt-4">
-            Don’t have an account?{" "}
-            <span className="text-[#1f5138] font-medium cursor-pointer">
-              Register
+            {t('dontHaveAccount')}{" "}
+            <span onClick={()=>navigate('/auth/register')} className="text-[#1f5138] font-medium cursor-pointer">
+             {t('register')}
             </span>
           </p>
         </div>

@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 
 import { en } from "./locales/en";
 import { fa } from "./locales/fa";
+import { ps } from "./locales/ps";
 import namespace from "./locales/namespace";
 
 const savedLanguage = localStorage.getItem("areya_bazar_lang") || "fa";
@@ -13,6 +14,7 @@ i18n
     resources: {
       en,
       fa,
+      ps
     },
 
     lng: savedLanguage,
