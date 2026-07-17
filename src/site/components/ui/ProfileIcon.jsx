@@ -55,10 +55,10 @@ function ProfileIcon({is_login}) {
   if (!is_login) {
     return (
       <div className="flex items-center max-sm:hidden gap-2 ml-2 ">
-        <button onClick={()=>navigate('/login')} className="px-4 py-2 text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200">
+        <button onClick={()=>navigate('/auth/login')} className="px-4 py-2 text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200">
           Login
         </button>
-        <button onClick={()=>navigate('/register')} className="px-4 py-2 text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90">
+        <button onClick={()=>navigate('/auth/register')} className="px-4 py-2 text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90">
           Register
         </button>
       </div>

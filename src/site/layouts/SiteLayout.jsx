@@ -4,20 +4,34 @@ import useLangStore from '../../stores/LangStore'
 import Header from './Header';
 import { useTranslation } from 'react-i18next';
 import Footer from './Footer';
+import { Route, Routes } from 'react-router-dom';
+import Home from '../pages/Home';
+import Shop from '../pages/Shop';
+import About from '../pages/About';
+import Contact from '../pages/Contact';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
+
 
 function SiteLayout() {
-  const {language , changeLanguage} = useLangStore();
-  const {t} = useTranslation('common');
+  const { language, changeLanguage } = useLangStore();
+  const { t } = useTranslation('common');
   return (
     <div>
-      <Topbar/>
-      <Header/>
-      {language}
-     <h1> {t('save')}</h1>
+      <Topbar />
+      <Header />
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/shop' element={<Shop />} />
+        <Route path='/about' element={< About />} />
+        <Route path='/contact' element={<Contact />} />
+        <Route path='/contact' element={<Contact />} />
+        <Route path='/contact' element={<Contact />} />
+        <Route path='/auth/login' element={<Login />} />
+        <Route path='/auth/register' element={<Register />} />
+      </Routes>
 
-      <span onClick={()=>changeLanguage('fa')}>fa</span>
-      <span onClick={()=>changeLanguage('en')}>en</span>
-<Footer/>
+      <Footer />
     </div>
   )
 }

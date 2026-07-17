@@ -5,8 +5,10 @@ import LanguageIcon from "../components/ui/LanguageIcon";
 import ProfileIcon from "../components/ui/ProfileIcon";
 import MobileMunuIcon from "../components/ui/MobileMunuIcon";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Header() {
+    const navigate = useNavigate();
     const headerMenu = [
         { label: "Home", url: "/" },
         { label: "Shop", url: "/shop" },
@@ -14,7 +16,11 @@ function Header() {
         { label: "Contact", url: "/contact" },
     ];
 
-    const [is_login , setIsLogin] = useState(true);
+    const handleClickMenuItem = (path) => {
+        navigate(path)
+    }
+
+    const [is_login , setIsLogin] = useState(false);
 
     return (
         <header className="w-full sticky top-0 h-[70px] flex justify-between items-center bg-white shadow-md xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3">
