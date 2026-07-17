@@ -25,8 +25,8 @@ const register_text = "ثبت نام رایگان";
 
 function TopBar() {
   return (
-    <div className="bg-primary w-full px-3  lg:px-10 py-2">
-      <div className="flex items-center justify-between">
+    <div className="  bg-primary w-full px-3  lg:px-10 py-2">
+      <div className="flex items-center justify-between max-w-7xl mx-auto 2xl:px-12">
 
         {/* Social Icons */}
         <div className="flex items-center gap-2">

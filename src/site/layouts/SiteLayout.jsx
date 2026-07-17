@@ -17,7 +17,7 @@ function SiteLayout() {
   const { language, changeLanguage } = useLangStore();
   const { t } = useTranslation('common');
   return (
-    <div>
+    <div className=''>
       <Topbar />
       <Header />
       <Routes>

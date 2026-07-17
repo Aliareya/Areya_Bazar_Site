@@ -62,7 +62,7 @@ function Footer() {
   return (
     <footer className="bg-[#1b4332] text-white">
       {/* Top Section */}
-      <div className="px-4 md:px-5 lg:px-6 xl:px-10 py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 text-sm">
+      <div className="max-w-7xl mx-auto px-4 md:px-5 lg:px-6 xl:px-10 py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 text-sm">
         {f_data.sections.map((item, index) => {
           return (
             <div key={index}>

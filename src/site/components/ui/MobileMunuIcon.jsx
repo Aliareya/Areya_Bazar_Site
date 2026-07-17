@@ -72,7 +72,7 @@ function MobileMunuIcon({is_login}) {
 
 
   return (
-    <div className="relative">
+    <div className="relative !z-50">
       <Icon
         ref={mainMenuIcomRef}
         icon={!open ? "mage:dash-menu" : "lets-icons:close-round"}
@@ -86,7 +86,7 @@ function MobileMunuIcon({is_login}) {
       {open && (
         <div
           ref={mobileref}
-          className={`${lang === 'fa'|| lang === 'ps' ? '-left-2' :"-right-2 "} absolute top-[50px] z-50 w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
+          className={`${lang === 'fa'|| lang === 'ps' ? '-left-2' :"-right-2 "} z-[999] absolute top-[50px]  w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
         >
           {is_login && (
             <div className="relative px-4 py-3 border-b flex items-center justify-between">
