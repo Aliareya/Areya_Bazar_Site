@@ -33,7 +33,7 @@ function LanguageIcon({ myclass = null }) {
   ];
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative !z-auto" ref={ref}>
 
       {/* Trigger */}
       <button
@@ -47,7 +47,7 @@ function LanguageIcon({ myclass = null }) {
 
       {/* Dropdown */}
       <div
-        className={`${lang === "fa" || lang === "ps" ? "right-0" : "right-0"} z-50 absolute  mt-2 w-40 border border-gray-200 bg-white shadow-lg rounded-md overflow-hidden transition-all duration-200 ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+        className={`${lang === "fa" || lang === "ps" ? "right-0" : "right-0"} !z-50 absolute  mt-2 w-40 border border-gray-200 bg-white shadow-lg rounded-md overflow-hidden transition-all duration-200 ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
           }`}
       >
         {languages.map((item) => (
