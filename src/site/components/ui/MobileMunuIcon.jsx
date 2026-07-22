@@ -342,7 +342,7 @@ function MobileMunuIcon() {
 
               <button
                 onClick={() =>
-                  navigate("/login")
+                  navigate("/auth/login")
                 }
                 className="px-4 py-2 w-full text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200"
               >
@@ -351,7 +351,7 @@ function MobileMunuIcon() {
 
               <button
                 onClick={() =>
-                  navigate("/register")
+                  navigate("/auth/register")
                 }
                 className="px-4 py-2 w-full text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90"
               >
