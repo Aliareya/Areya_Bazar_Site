@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
       try {
         setLoading(true)
         const response = await fetch(
-          "http://localhost:3000/auth/me",
+          "https://areya-bazaar-backend.onrender.com/auth/me",
           {
             method: "GET",
             headers: {

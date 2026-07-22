@@ -76,7 +76,7 @@ export default function Login() {
 
     try {
       const res = await fetch(
-        "http://localhost:3000/auth/login",
+        "https://areya-bazaar-backend.onrender.com/auth/login",
         {
           method: "POST",
 
