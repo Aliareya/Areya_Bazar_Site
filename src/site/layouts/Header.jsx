@@ -6,8 +6,10 @@ import ProfileIcon from "../components/ui/ProfileIcon";
 import MobileMunuIcon from "../components/ui/MobileMunuIcon";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 function Header() {
+    const { user , is_login , loading } = useAuth();
     const navigate = useNavigate();
     const headerMenu = [
         { label: "Home", url: "/" },
@@ -19,8 +21,6 @@ function Header() {
     const handleClickMenuItem = (path) => {
         navigate(path)
     }
-
-    const [is_login , setIsLogin] = useState(false);
 
     return (
         <div className=" !z-40 sticky top-0 mx-auto bg-white shadow-md">
@@ -56,7 +56,7 @@ function Header() {
                     <ProfileIcon is_login={is_login}/>
                 </div>
                 <div className="lg:hidden ">
-                    <MobileMunuIcon is_login={is_login}/>
+                    <MobileMunuIcon />
                 </div>
             </div>
 
