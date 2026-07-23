@@ -3,10 +3,12 @@ import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import useLangStore from "../../../stores/LangStore";
+import { useTranslation } from "react-i18next";
 
 function ProfileIcon() {
+  const {t} = useTranslation('header')
+  const {t:c} = useTranslation('common')
   const { loading, is_login, user } = useAuth();
-  console.log(user)
   const { language } = useLangStore()
   const navigate = useNavigate();
   const usermenu = [
@@ -66,13 +68,13 @@ function ProfileIcon() {
           onClick={() => navigate("/auth/login")}
           className="px-4 py-2 text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200"
         >
-          Login
+          {c('login')}
         </button>
         <button
           onClick={() => navigate("/auth/register")}
           className="px-4 py-2 text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90"
         >
-          Register
+          {c('register')}
         </button>
       </div>
     );
@@ -86,7 +88,7 @@ function ProfileIcon() {
         className={` flex items-center gap-2 p-1.5 ml-1 bg-gray-100 rounded-md`}
       >
         <Icon icon="mdi:account-circle" className="text-2xl" />
-        <span className="hidden md:block text-[#133d28]">{user?.firstName}</span>
+        <span className="hidden md:block text-[#133d28]">{user?.first_name}</span>
         <Icon icon="mdi:chevron-down" />
       </button>
 
@@ -105,8 +107,8 @@ function ProfileIcon() {
           )}
           
           <div>
-            <p className="font-semibold">{user?.firstName}{" "}{user?.lastName}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
+            <p className="font-semibold">{user?.first_name}{" "}{user?.last_name}</p>
+            <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
         </div>
 
@@ -119,7 +121,7 @@ function ProfileIcon() {
                 } flex items-center gap-2 px-4 py-2 hover:bg-gray-100`}
             >
               <Icon icon={item.icon} />
-              {item.label}
+              {t(item.name)}
             </button>
           ))}
         </div>

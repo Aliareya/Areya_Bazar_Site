@@ -1,7 +1,8 @@
 const namespaces = [
   "common",
   "auth",
-  "home"
+  "home",
+  "header"
 ];
 
 export default namespaces;

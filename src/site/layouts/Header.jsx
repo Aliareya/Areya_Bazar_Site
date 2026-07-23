@@ -8,16 +8,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import useLangStore from "../../stores/LangStore";
+import { useTranslation } from "react-i18next";
 
 function Header() {
     const { user, is_login, loading } = useAuth();
+    const {t}= useTranslation('header');
     const {language} = useLangStore()
     const navigate = useNavigate();
     const headerMenu = [
-        { label: "Home", url: "/" },
-        { label: "Shop", url: "/shop" },
-        { label: "About", url: "/about" },
-        { label: "Contact", url: "/contact" },
+        { label: "home", url: "/" },
+        { label: "shop", url: "/shop" },
+        { label: "about", url: "/about" },
+        { label: "contact", url: "/contact" },
     ];
 
     const handleClickMenuItem = (path) => {
@@ -31,11 +33,11 @@ function Header() {
                     <img className="w-auto xl:h-26 md:h-24 max-md:h-24 max-sm:h-20 lg:h-[85px] object-contain" src={logo} alt="" />
                 </div>
 
-                <div className={` items-center xl:gap-8 lg:gap-6 hidden lg:flex `}>
+                <div className={` items-center xl:gap-8 lg:gap-6 hidden lg:flex ${language === 'fa' || language === 'ps' ? 'flex-row-reverse':''}`}>
                     {headerMenu?.map((item, index) => (
                         <li onClick={() => handleClickMenuItem(item.url)}
                             key={index} className="cursor-pointer hover:font-semibold text-[#1f5138] list-none text-base font-normal">
-                            {item.label}
+                            {t(item.label)}
                         </li>
                     ))}
                 </div>

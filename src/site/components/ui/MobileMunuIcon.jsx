@@ -4,6 +4,7 @@ import ali from "../../../assets/images/ali.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import useLangStore from "../../../stores/LangStore";
+import { useTranslation } from "react-i18next";
 
 /* ========================================
    USER PROFILE LOADING SKELETON
@@ -13,10 +14,8 @@ function UserProfileSkeleton() {
   return (
     <div className="px-4 py-3 border-b">
       <div className="flex items-center justify-between">
-
         {/* Avatar + User Info */}
         <div className="flex items-center gap-2">
-
           {/* Avatar */}
           <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
 
@@ -25,26 +24,25 @@ function UserProfileSkeleton() {
             <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
             <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
           </div>
-
         </div>
 
         {/* Arrow */}
         <div className="w-7 h-7 rounded-full bg-gray-200 animate-pulse" />
-
       </div>
     </div>
   );
 }
-
 
 /* ========================================
    MAIN COMPONENT
 ======================================== */
 
 function MobileMunuIcon() {
+  const {t} = useTranslation('header')
+  const {t:c} = useTranslation('common')
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const {language} =useLangStore()
+  const { language } = useLangStore();
 
   const mobileref = useRef();
   const mainMenuIcomRef = useRef();
@@ -62,11 +60,6 @@ function MobileMunuIcon() {
       name: "shop",
       label: "Shop",
       url: "/shop",
-    },
-    {
-      name: "categories",
-      label: "Categories",
-      url: "/categories",
     },
     {
       name: "about",
@@ -108,7 +101,6 @@ function MobileMunuIcon() {
     },
   ];
 
-
   useEffect(() => {
     const handleClick = (e) => {
       if (
@@ -121,16 +113,10 @@ function MobileMunuIcon() {
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClick
-    );
+    document.addEventListener("mousedown", handleClick);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClick
-      );
+      document.removeEventListener("mousedown", handleClick);
     };
   }, []);
 
@@ -153,16 +139,11 @@ function MobileMunuIcon() {
 
   return (
     <div className="relative !z-50">
-
       {/* Menu Icon */}
 
       <Icon
         ref={mainMenuIcomRef}
-        icon={
-          !open
-            ? "mage:dash-menu"
-            : "lets-icons:close-round"
-        }
+        icon={!open ? "mage:dash-menu" : "lets-icons:close-round"}
         className="max-sm:flex cursor-pointer"
         width="28"
         height="28"
@@ -174,24 +155,20 @@ function MobileMunuIcon() {
       {open && (
         <div
           ref={mobileref}
-          className={`${language === "fa" || language === "ps"
-              ? "-left-2"
-              : "-right-2"
-            } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
+          className={`${
+            language === "fa" || language === "ps" ? "-left-2" : "-right-2"
+          } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
         >
-
           {loading ? (
             <UserProfileSkeleton />
           ) : (
-            is_login && user && (
+            is_login &&
+            user && (
               <div className="relative px-4 py-3 border-b">
-
                 {/* User Header */}
 
                 <div className="flex items-center justify-between">
-
                   <div className="flex items-center gap-2">
-
                     {/* Avatar */}
 
                     <div
@@ -204,19 +181,14 @@ function MobileMunuIcon() {
                     {/* User Info */}
 
                     <div>
-
                       <p className="font-semibold">
-                        {user.first_name ||
-                          user.firstName ||
-                          "User"}
+                        {user.firstName || user.firstName || "User"}
                       </p>
 
                       <p className="text-sm text-gray-500">
                         {user.email || ""}
                       </p>
-
                     </div>
-
                   </div>
 
                   {/* Profile Toggle */}
@@ -236,81 +208,57 @@ function MobileMunuIcon() {
                       height="24"
                     />
                   </button>
-
                 </div>
 
                 {profileOpen && (
                   <div className="absolute top-14 right-3 mt-2 w-64 border border-gray-200 bg-gray-100 shadow-xl rounded-md overflow-hidden">
+                    {usermenu.map((item) => (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          if (item.name === "logout") {
+                            handleLogout();
+                            return;
+                          }
 
-                    {usermenu.map(
-                      (item) => (
-                        <button
-                          key={item.name}
-                          onClick={() => {
-                            if (
-                              item.name ===
-                              "logout"
-                            ) {
-                              handleLogout();
-                              return;
-                            }
+                          navigate(item.url);
 
-                            navigate(
-                              item.url
-                            );
+                          setOpen(false);
+                          setProfileOpen(false);
+                        }}
+                        className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${
+                          item.danger ? "text-red-500" : ""
+                        }`}
+                      >
+                        <Icon icon={item.icon} width={20} height={20} />
 
-                            setOpen(false);
-                            setProfileOpen(false);
-                          }}
-                          className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${item.danger
-                              ? "text-red-500"
-                              : ""
-                            }`}
-                        >
-
-                          <Icon
-                            icon={item.icon}
-                            width={20}
-                            height={20}
-                          />
-
-                          {item.label}
-
-                        </button>
-                      )
-                    )}
-
+                        {t(item.name)}
+                      </button>
+                    ))}
                   </div>
                 )}
-
               </div>
             )
           )}
-
 
           {/* ========================================
               MAIN MENU
           ======================================== */}
 
           <div className="flex flex-col">
-
-            {menuitems.map(
-              (item) => (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    navigate(item.url);
-                    setOpen(false);
-                  }}
-                  className="flex items-center px-4 py-2 border-b border-gray-100 hover:bg-gray-100"
-                >
-                  {item.label}
-                </button>
-              )
-            )}
-
+            {menuitems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  navigate(item.url);
+                  setOpen(false);
+                }}
+                className="flex items-center px-4 py-2 border-b border-gray-100 hover:bg-gray-100"
+              >
+                {t(item.name)}
+              </button>
+            ))}
           </div>
-
 
           {/* ========================================
               LOGIN / REGISTER
@@ -318,31 +266,23 @@ function MobileMunuIcon() {
 
           {!loading && !is_login && (
             <div className="flex flex-col gap-2 px-4 pb-3">
-
               <button
-                onClick={() =>
-                  navigate("/auth/login")
-                }
+                onClick={() => navigate("/auth/login")}
                 className="px-4 py-2 w-full text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200"
               >
-                Login
+                {c('login')}
               </button>
 
               <button
-                onClick={() =>
-                  navigate("/auth/register")
-                }
+                onClick={() => navigate("/auth/register")}
                 className="px-4 py-2 w-full text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90"
               >
-                Register
+                {c('register')}
               </button>
-
             </div>
           )}
-
         </div>
       )}
-
     </div>
   );
 }
