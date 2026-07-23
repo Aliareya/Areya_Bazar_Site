@@ -3,26 +3,24 @@ import * as yup from "yup";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useApi } from "../../context/ApiContext";
 
-// -----------------------------
-// Validation schema (Yup)
-// -----------------------------
 const registerSchema = yup.object().shape({
-  name: yup
+  firstName: yup
     .string()
     .trim()
-    .min(3, "Name must be at least 3 characters")
-    .required("Full name is required"),
+    .min(2, "First name must be at least 2 characters")
+    .required("First name is required"),
+  lastName: yup
+    .string()
+    .trim()
+    .min(2, "Last name must be at least 2 characters")
+    .required("Last name is required"),
   email: yup
     .string()
     .trim()
     .email("Enter a valid email address")
     .required("Email is required"),
-  phone: yup
-    .string()
-    .trim()
-    .matches(/^[0-9+\s-]{7,15}$/, "Enter a valid phone number")
-    .required("Phone number is required"),
   password: yup
     .string()
     .min(6, "Password must be at least 6 characters")
@@ -39,19 +37,21 @@ const registerSchema = yup.object().shape({
 
 const ROLE_OPTIONS = ["buyer", "seller"];
 
+const INITIAL_FORM = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "buyer",
+};
+
 export default function Register() {
+  const { apiurl } = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    role: "buyer",
-  });
-
+  const [form, setForm] = useState(INITIAL_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,9 +65,6 @@ export default function Register() {
     setForm((prev) => ({ ...prev, role }));
   };
 
-  // -----------------------------
-  // Submit
-  // -----------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -82,18 +79,17 @@ export default function Register() {
 
     // 2) Prepare payload for API
     const payload = {
-      name: form.name.trim(),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
-      phone: form.phone.trim(),
       password: form.password,
       role: form.role,
     };
 
     // 3) Send to API
     setLoading(true);
-    console.log(payload)
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${apiurl}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -113,13 +109,11 @@ export default function Register() {
   };
 
   const handleSocialLogin = (provider) => {
-    // TODO: replace with real OAuth redirect, e.g.:
     // window.location.href = `/api/auth/${provider}`;
-    window.location.href = `/api/auth/${provider}`;
   };
 
   return (
-    <div className=" py-5 flex items-center justify-center bg-gray-100 max-sm:px-3 md:px-5 max-md:px-6 lg:px-10">
+    <div className="py-5 flex items-center justify-center bg-gray-100 max-sm:px-3 md:px-5 max-md:px-6 lg:px-10">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg overflow-hidden flex">
         {/* LEFT SIDE IMAGE */}
         <div className="hidden lg:block w-1/2">
@@ -159,8 +153,9 @@ export default function Register() {
                     key={role}
                     type="button"
                     onClick={() => selectRole(role)}
-                    className={`flex-1 py-2 rounded-lg border text-sm ${form.role === role ? "bg-[#1f5138] text-white" : "bg-white"
-                      }`}
+                    className={`flex-1 py-2 rounded-lg border text-sm ${
+                      form.role === role ? "bg-[#1f5138] text-white" : "bg-white"
+                    }`}
                   >
                     {t(role)}
                   </button>
@@ -168,29 +163,32 @@ export default function Register() {
               </div>
             </div>
 
-            <input
-              type="text"
-              name="name"
-              placeholder={t("fullName")}
-              value={form.name}
-              onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-2"
-            />
+            {/* FIRST + LAST NAME */}
+            <div className="flex gap-3">
+              <input
+                type="text"
+                name="firstName"
+                placeholder={t("firstName")}
+                value={form.firstName}
+                onChange={handleChange}
+                className="w-1/2 border rounded-lg px-4 py-2"
+              />
+
+              <input
+                type="text"
+                name="lastName"
+                placeholder={t("lastName")}
+                value={form.lastName}
+                onChange={handleChange}
+                className="w-1/2 border rounded-lg px-4 py-2"
+              />
+            </div>
 
             <input
               type="email"
               name="email"
               placeholder={t("email")}
               value={form.email}
-              onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-2"
-            />
-
-            <input
-              type="text"
-              name="phone"
-              placeholder={t("phoneNumber")}
-              value={form.phone}
               onChange={handleChange}
               className="w-full border rounded-lg px-4 py-2"
             />
@@ -236,7 +234,7 @@ export default function Register() {
               disabled={loading}
               className="w-full bg-[#1f5138] text-white py-2 rounded-lg disabled:opacity-60"
             >
-              {loading ? t("Creating") : t("createAccount")}
+              {loading ? t("creating") : t("createAccount")}
             </button>
           </form>
 

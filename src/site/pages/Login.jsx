@@ -114,7 +114,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       setError(
-        "Something went wrong"
+        "Please Try Again Latter"
       );
     } finally {
       setLoading(false);

@@ -9,7 +9,7 @@ function ProfileIcon() {
   const {t} = useTranslation('header')
   const {t:c} = useTranslation('common')
   const { loading, is_login, user } = useAuth();
-  const { language } = useLangStore()
+  const { language :lang } = useLangStore()
   const navigate = useNavigate();
   const usermenu = [
     {
@@ -38,7 +38,6 @@ function ProfileIcon() {
       danger: true
     }
   ];
-  const lang = language;
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -88,7 +87,7 @@ function ProfileIcon() {
         className={` flex items-center gap-2 p-1.5 ml-1 bg-gray-100 rounded-md`}
       >
         <Icon icon="mdi:account-circle" className="text-2xl" />
-        <span className="hidden md:block text-[#133d28]">{user?.first_name}</span>
+        <span className="hidden md:block text-[#133d28]">{user?.firstName}</span>
         <Icon icon="mdi:chevron-down" />
       </button>
 
@@ -107,7 +106,7 @@ function ProfileIcon() {
           )}
           
           <div>
-            <p className="font-semibold">{user?.first_name}{" "}{user?.last_name}</p>
+            <p className="font-semibold">{user?.firstName}{" "}{user?.lastName}</p>
             <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
         </div>
