@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
 
 // -----------------------------
@@ -23,6 +24,7 @@ const loginSchema = yup.object().shape({
 
 export default function Login() {
   const { user, is_login, login, logout } = useAuth();
+  const {apiurl} = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
 
@@ -76,7 +78,7 @@ export default function Login() {
 
     try {
       const res = await fetch(
-        "https://areya-bazaar-backend.onrender.com/auth/login",
+        `${apiurl}/auth/login`,
         {
           method: "POST",
 
@@ -112,7 +114,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       setError(
-        err.message || "Something went wrong"
+        "Something went wrong"
       );
     } finally {
       setLoading(false);

@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        setLoading(true)
         const response = await fetch(
           "https://areya-bazaar-backend.onrender.com/auth/me",
           {

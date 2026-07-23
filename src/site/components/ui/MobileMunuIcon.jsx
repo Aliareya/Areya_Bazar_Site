@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import ali from "../../../assets/images/ali.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import useLangStore from "../../../stores/LangStore";
 
 /* ========================================
    USER PROFILE LOADING SKELETON
@@ -43,12 +44,13 @@ function UserProfileSkeleton() {
 function MobileMunuIcon() {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const {language} =useLangStore()
 
   const mobileref = useRef();
   const mainMenuIcomRef = useRef();
 
   const navigate = useNavigate();
-  const {loading , is_login , user , logout} = useAuth();
+  const { loading, is_login, user, logout } = useAuth();
 
   const menuitems = [
     {
@@ -106,7 +108,6 @@ function MobileMunuIcon() {
     },
   ];
 
-  const lang = "en";
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -173,27 +174,16 @@ function MobileMunuIcon() {
       {open && (
         <div
           ref={mobileref}
-          className={`${
-            lang === "fa" || lang === "ps"
+          className={`${language === "fa" || language === "ps"
               ? "-left-2"
               : "-right-2"
-          } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
+            } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
         >
 
-          {/* ========================================
-              USER PROFILE
-          ======================================== */}
-
           {loading ? (
-
-            /* Loading */
             <UserProfileSkeleton />
-
           ) : (
-
-            /* User */
-            is_login &&
-            user && (
+            is_login && user && (
               <div className="relative px-4 py-3 border-b">
 
                 {/* User Header */}
@@ -249,11 +239,6 @@ function MobileMunuIcon() {
 
                 </div>
 
-
-                {/* ========================================
-                    PROFILE DROPDOWN
-                ======================================== */}
-
                 {profileOpen && (
                   <div className="absolute top-14 right-3 mt-2 w-64 border border-gray-200 bg-gray-100 shadow-xl rounded-md overflow-hidden">
 
@@ -262,9 +247,6 @@ function MobileMunuIcon() {
                         <button
                           key={item.name}
                           onClick={() => {
-
-                            /* Logout */
-
                             if (
                               item.name ===
                               "logout"
@@ -273,8 +255,6 @@ function MobileMunuIcon() {
                               return;
                             }
 
-                            /* Navigate */
-
                             navigate(
                               item.url
                             );
@@ -282,11 +262,10 @@ function MobileMunuIcon() {
                             setOpen(false);
                             setProfileOpen(false);
                           }}
-                          className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${
-                            item.danger
+                          className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${item.danger
                               ? "text-red-500"
                               : ""
-                          }`}
+                            }`}
                         >
 
                           <Icon
