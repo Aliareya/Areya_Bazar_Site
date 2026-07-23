@@ -38,8 +38,8 @@ function UserProfileSkeleton() {
 ======================================== */
 
 function MobileMunuIcon() {
-  const {t} = useTranslation('header')
-  const {t:c} = useTranslation('common')
+  const { t } = useTranslation("header");
+  const { t: c } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { language } = useLangStore();
@@ -270,14 +270,14 @@ function MobileMunuIcon() {
                 onClick={() => navigate("/auth/login")}
                 className="px-4 py-2 w-full text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200"
               >
-                {c('login')}
+                {c("login")}
               </button>
 
               <button
                 onClick={() => navigate("/auth/register")}
                 className="px-4 py-2 w-full text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90"
               >
-                {c('register')}
+                {c("register")}
               </button>
             </div>
           )}
