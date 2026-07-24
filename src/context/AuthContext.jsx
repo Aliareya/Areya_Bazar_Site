@@ -13,8 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Check authentication when app starts
-  useEffect(() => {
-    const checkAuth = async () => {
+const checkAuth = async () => {
       const token = localStorage.getItem("accessToken");
 
       // No token
@@ -54,6 +53,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+  useEffect(() => {
     checkAuth();
   }, []);
 
@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        checkAuth
       }}
     >
       {children}

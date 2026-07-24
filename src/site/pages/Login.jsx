@@ -91,7 +91,6 @@ export default function Login() {
       );
 
       const data = await res.json();
-      console.log(data)
       if (!res.ok) {
         const errorMessage = Array.isArray(data?.message)
           ? data.message.join(", ")
@@ -107,7 +106,7 @@ export default function Login() {
 
       if (data.data) {
         localStorage.setItem("user", JSON.stringify(data?.data));
-        login(data.data, data?.token);
+        login(data?.data, data?.token);
         toast.success(data.message)
       }
 

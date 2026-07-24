@@ -4,14 +4,18 @@ import Search from "../components/ui/Serach";
 import LanguageIcon from "../components/ui/LanguageIcon";
 import ProfileIcon from "../components/ui/ProfileIcon";
 import MobileMunuIcon from "../components/ui/MobileMunuIcon";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import useLangStore from "../../stores/LangStore";
 import { useTranslation } from "react-i18next";
 
 function Header() {
-    const { user, is_login, loading } = useAuth();
+    const { user, is_login, loading , checkAuth } = useAuth();
+
+    useEffect(()=>{
+        checkAuth()
+    },[])
     const {t}= useTranslation('header');
     const {language} = useLangStore()
     const navigate = useNavigate();
@@ -57,7 +61,7 @@ function Header() {
                         <LanguageIcon />
                     </div>
                     <div className="">
-                        <ProfileIcon is_login={is_login} />
+                        <ProfileIcon is_login={is_login} user={user} />
                     </div>
                     <div className="lg:hidden ">
                         <MobileMunuIcon />
