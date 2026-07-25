@@ -208,7 +208,7 @@ function FilterPill({ label, onRemove }) {
 
 function ProductCard({ product, wishlisted, onToggleWishlist, onQuickView, onAddToCart }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-3 group">
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
       <div className="relative rounded-xl overflow-hidden bg-gray-100">
         <span className="absolute top-3 left-3 z-10 bg-green-700 text-white text-xs font-medium px-2.5 py-1 rounded-full">
           {product.discount}
@@ -680,8 +680,8 @@ export default function Shop() {
       </div>
 
       {/* Page title */}
-      <div className="text-center py-10 bg-gray-50">
-        <h1 className="text-3xl font-bold text-gray-900">Shop</h1>
+      <div className="text-center py-12 bg-[#1f513830]">
+        <h1 className="text-3xl font-bold text-[#1f5138]">Shop</h1>
         <p className="text-sm text-gray-500 mt-2">Home / Shop</p>
       </div>
 
@@ -698,7 +698,7 @@ export default function Shop() {
           />
 
           {/* Toolbar */}
-          <div className="flex p-3 bg-[#1f5138] rounded-lg flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex p-3 bg-[#23633a] rounded-lg flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <p className="text-sm text-gray-100">
               {sortedProducts.length === 0
                 ? "No results found"
