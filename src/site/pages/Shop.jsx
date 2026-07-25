@@ -639,7 +639,7 @@ export default function Shop() {
     filters.colors.length ||
     filters.materials.length ||
     filters.availability.length;
-
+console.log("hasActiveFilters" , hasActiveFilters)
   const activeFilterCount =
     (filters.category ? 1 : 0) +
     (activePriceChanged ? 1 : 0) +
@@ -711,7 +711,7 @@ export default function Shop() {
           </div>
 
           {/* Active filters */}
-          {hasActiveFilters && (
+          {hasActiveFilters  ?(
             <div className="flex flex-wrap items-center gap-2 mb-8">
               {filters.category && (
                 <FilterPill label={filters.category} onRemove={() => removeFilter("category")} />
@@ -738,7 +738,7 @@ export default function Shop() {
                 Clear All
               </button>
             </div>
-          )}
+          ) : ""}
 
           {/* Product grid */}
           {paginatedProducts.length > 0 ? (
