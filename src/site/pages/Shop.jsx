@@ -2,6 +2,13 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
 // ---------------------------------------------------------------------------
+// Design tokens
+// ---------------------------------------------------------------------------
+const FILTER_BG = "#23633a";     // deep forest green — filter panel background
+const FILTER_BG_SOFT = "#1c4f2f"; // slightly darker, for wells/inputs inside the panel
+const ACCENT = "#f97316";         // warm accent for active filter states (matches pagination)
+
+// ---------------------------------------------------------------------------
 // Product data
 // ---------------------------------------------------------------------------
 const PRODUCTS = [
@@ -43,21 +50,50 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Top Rated" },
 ];
 
-// ---------------------------------------------------------------------------
-// Small building blocks
-// ---------------------------------------------------------------------------
+
+function SortSelect({ value, onChange, className = "" }) {
+  return (
+    <div className={`relative ${className}`}>
+      <Icon
+        icon="mdi:sort-variant"
+        className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+      />
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label="Sort products"
+        className="w-full appearance-none bg-white border border-gray-200 rounded-lg pl-9 pr-9 py-2.5 text-sm text-gray-700 cursor-pointer hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-1 transition-colors"
+        style={{ "--tw-ring-color": FILTER_BG }}
+        onFocus={(e) => (e.target.style.borderColor = FILTER_BG)}
+        onBlur={(e) => (e.target.style.borderColor = "")}
+      >
+        {SORT_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <Icon
+        icon="mdi:chevron-down"
+        className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+      />
+    </div>
+  );
+}
+
+
 function FilterSection({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-gray-100 pb-5">
+    <div className="border-b border-white/15 pb-4">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between mb-3 group"
       >
-        <h3 className="font-medium text-gray-900">{title}</h3>
+        <h3 className="font-medium text-white tracking-wide text-sm uppercase">{title}</h3>
         <Icon
           icon="mdi:chevron-down"
-          className={`w-4 h-4 text-gray-400 transition-transform group-hover:text-gray-600 ${
+          className={`w-4 h-4 text-white/50 transition-transform group-hover:text-white ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -93,9 +129,9 @@ function DualRangeSlider({ min, max, values, onChange }) {
           width: 16px;
           height: 16px;
           border-radius: 9999px;
-          background: #15803d;
+          background: ${ACCENT};
           border: 2px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.35);
           cursor: pointer;
         }
         .range-thumb::-moz-range-thumb {
@@ -103,19 +139,20 @@ function DualRangeSlider({ min, max, values, onChange }) {
           width: 16px;
           height: 16px;
           border-radius: 9999px;
-          background: #15803d;
+          background: ${ACCENT};
           border: 2px solid white;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.35);
           cursor: pointer;
         }
         .range-thumb::-webkit-slider-runnable-track { background: transparent; }
         .range-thumb::-moz-range-track { background: transparent; }
       `}</style>
+
       <div className="relative h-6 flex items-center">
-        <div className="absolute w-full h-1.5 bg-gray-200 rounded-full" />
+        <div className="absolute w-full h-1.5 bg-white/20 rounded-full" />
         <div
-          className="absolute h-1.5 bg-green-700 rounded-full"
-          style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
+          className="absolute h-1.5 rounded-full"
+          style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%`, background: ACCENT }}
         />
         <input
           type="range"
@@ -140,11 +177,17 @@ function DualRangeSlider({ min, max, values, onChange }) {
           className="range-thumb"
         />
       </div>
-      <div className="flex items-center justify-between text-sm text-gray-600 mt-2">
-        <span className="px-2 py-1 bg-gray-50 rounded-md border border-gray-100">
+      <div className="flex items-center justify-between text-sm text-white mt-2">
+        <span
+          className="px-2 py-1 rounded-md border border-white/15"
+          style={{ background: FILTER_BG_SOFT }}
+        >
           ${minVal.toFixed(2)}
         </span>
-        <span className="px-2 py-1 bg-gray-50 rounded-md border border-gray-100">
+        <span
+          className="px-2 py-1 rounded-md border border-white/15"
+          style={{ background: FILTER_BG_SOFT }}
+        >
           ${maxVal.toFixed(2)}
         </span>
       </div>
@@ -163,9 +206,6 @@ function FilterPill({ label, onRemove }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Product card
-// ---------------------------------------------------------------------------
 function ProductCard({ product, wishlisted, onToggleWishlist, onQuickView, onAddToCart }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-3 group">
@@ -228,9 +268,6 @@ function ProductCard({ product, wishlisted, onToggleWishlist, onQuickView, onAdd
   );
 }
 
-// ---------------------------------------------------------------------------
-// Filter content — shared by the desktop sidebar AND the mobile drawer
-// ---------------------------------------------------------------------------
 function FilterContent({ filters, setFilters, resultCount, compact = false }) {
   const toggleInArray = (key, value) => {
     setFilters((prev) => {
@@ -252,22 +289,22 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
   return (
     <div className={compact ? "space-y-4" : "space-y-5"}>
       {!compact && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Filter Options</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{resultCount} results found</p>
+            <h2 className="text-lg font-semibold text-white">Filter Options</h2>
+            <p className="text-xs text-white/60 mt-0.5">{resultCount} results found</p>
           </div>
           <button
             onClick={resetFilters}
             title="Reset filters"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-green-700 hover:bg-green-50 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
           >
             <Icon icon="mdi:refresh" className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      <FilterSection title="Category" defaultOpen={!compact}>
+      <FilterSection title="Category" defaultOpen={compact}>
         <ul className="space-y-1 text-sm">
           {CATEGORIES.map((cat) => {
             const active = filters.category === cat;
@@ -282,8 +319,8 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
                   }
                   className={`w-full text-left px-3 py-1.5 rounded-lg border-l-2 transition-colors ${
                     active
-                      ? "border-green-700 bg-green-50 text-green-700 font-medium"
-                      : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "border-orange-400 bg-white/10 text-white font-medium"
+                      : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {cat}
@@ -294,7 +331,7 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
         </ul>
       </FilterSection>
 
-      <FilterSection title="Price" defaultOpen={!compact}>
+      <FilterSection title="Price" defaultOpen={compact}>
         <DualRangeSlider
           min={PRICE_BOUNDS.min}
           max={PRICE_BOUNDS.max}
@@ -313,9 +350,9 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
                 onClick={() => toggleInArray("colors", c.name)}
                 title={c.name}
                 className={`relative w-7 h-7 rounded-full border transition-transform ${
-                  active ? "ring-2 ring-offset-2 ring-green-700 scale-105" : "border-gray-200"
+                  active ? "ring-2 ring-offset-2 ring-orange-400 scale-105" : "border-white/30"
                 }`}
-                style={{ backgroundColor: c.hex }}
+                style={{ backgroundColor: c.hex, "--tw-ring-offset-color": FILTER_BG }}
               >
                 {active && (
                   <Icon
@@ -331,16 +368,16 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
         </div>
       </FilterSection>
 
-      <FilterSection title="Material" defaultOpen={!compact}>
-        <ul className="space-y-2 text-sm text-gray-600">
+      <FilterSection title="Material" defaultOpen={compact}>
+        <ul className="space-y-2 text-sm text-white/80">
           {MATERIALS.map((m) => (
             <li key={m}>
-              <label className="flex items-center gap-2 cursor-pointer hover:text-gray-900">
+              <label className="flex items-center gap-2 cursor-pointer hover:text-white">
                 <input
                   type="checkbox"
                   checked={filters.materials.includes(m)}
                   onChange={() => toggleInArray("materials", m)}
-                  className="accent-green-700 rounded w-4 h-4"
+                  className="accent-orange-500 rounded w-4 h-4"
                 />
                 {m}
               </label>
@@ -349,16 +386,16 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
         </ul>
       </FilterSection>
 
-      <FilterSection title="Availability" defaultOpen>
-        <ul className="space-y-2 text-sm text-gray-600">
+      <FilterSection title="Availability"defaultOpen={!compact}>
+        <ul className="space-y-2 text-sm text-white/80">
           {["In Stock", "Out of Stock"].map((label) => (
             <li key={label}>
-              <label className="flex items-center gap-2 cursor-pointer hover:text-gray-900">
+              <label className="flex items-center gap-2 cursor-pointer hover:text-white">
                 <input
                   type="checkbox"
                   checked={filters.availability.includes(label)}
                   onChange={() => toggleInArray("availability", label)}
-                  className="accent-green-700 rounded w-4 h-4"
+                  className="accent-orange-500 rounded w-4 h-4"
                 />
                 {label}
               </label>
@@ -370,7 +407,7 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
       {compact && (
         <button
           onClick={resetFilters}
-          className="w-full text-sm text-gray-500 hover:text-gray-800 underline pt-1"
+          className="w-full text-sm text-white/70 hover:text-white underline pt-1"
         >
           Reset all filters
         </button>
@@ -379,48 +416,36 @@ function FilterContent({ filters, setFilters, resultCount, compact = false }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Desktop sidebar (lg and up)
-// ---------------------------------------------------------------------------
 function FilterSidebar({ filters, setFilters, resultCount }) {
   return (
     <aside className="hidden lg:block w-72 shrink-0">
-      <div className="sticky top-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div
+        className="sticky top-20 rounded-2xl shadow-sm p-5"
+        style={{ background: FILTER_BG }}
+      >
         <FilterContent filters={filters} setFilters={setFilters} resultCount={resultCount} />
       </div>
     </aside>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Mobile filter bar + bottom-sheet drawer (below lg breakpoint)
-// ---------------------------------------------------------------------------
 function MobileFilterBar({ onOpen, activeCount, sort, setSort }) {
   return (
     <div className="flex lg:hidden items-center gap-3 mb-6">
       <button
         onClick={onOpen}
-        className="flex-1 flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 relative"
+        className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium text-white relative shadow-sm hover:brightness-110 transition"
+        style={{ background: FILTER_BG }}
       >
         <Icon icon="mdi:tune-variant" className="w-4 h-4" />
         Filters
         {activeCount > 0 && (
-          <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-green-700 text-white text-[11px] flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-orange-500 text-white text-[11px] flex items-center justify-center">
             {activeCount}
           </span>
         )}
       </button>
-      <select
-        value={sort}
-        onChange={(e) => setSort(e.target.value)}
-        className="flex-1 border border-gray-200 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-700"
-      >
-        {SORT_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <SortSelect value={sort} onChange={setSort} className="flex-1" />
     </div>
   );
 }
@@ -434,18 +459,19 @@ function MobileFilterDrawer({ open, onClose, filters, setFilters, resultCount })
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div
-        className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col transition-transform duration-300 ${
+        className={`absolute bottom-0 left-0 right-0 rounded-t-2xl max-h-[85vh] flex flex-col transition-transform duration-300 ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
+        style={{ background: FILTER_BG }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/15 shrink-0">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Filter Options</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{resultCount} results found</p>
+            <h2 className="text-lg font-semibold text-white">Filter Options</h2>
+            <p className="text-xs text-white/60 mt-0.5">{resultCount} results found</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:bg-white/10 hover:text-white"
           >
             <Icon icon="mdi:close" className="w-5 h-5" />
           </button>
@@ -458,10 +484,11 @@ function MobileFilterDrawer({ open, onClose, filters, setFilters, resultCount })
             compact
           />
         </div>
-        <div className="px-5 py-4 border-t border-gray-100 shrink-0">
+        <div className="px-5 py-4 border-t border-white/15 shrink-0">
           <button
             onClick={onClose}
-            className="w-full bg-green-700 text-white font-medium py-2.5 rounded-lg hover:bg-green-800 transition-colors"
+            className="w-full bg-white font-medium py-2.5 rounded-lg hover:bg-white/90 transition-colors"
+            style={{ color: FILTER_BG }}
           >
             Show {resultCount} results
           </button>
@@ -471,9 +498,7 @@ function MobileFilterDrawer({ open, onClose, filters, setFilters, resultCount })
   );
 }
 
-// ---------------------------------------------------------------------------
-// Quick view modal
-// ---------------------------------------------------------------------------
+
 function QuickViewModal({ product, onClose }) {
   if (!product) return null;
   return (
@@ -524,9 +549,6 @@ function QuickViewModal({ product, onClose }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main Shop page
-// ---------------------------------------------------------------------------
 export default function Shop() {
   const [filters, setFilters] = useState({
     category: null,
@@ -676,25 +698,15 @@ export default function Shop() {
           />
 
           {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <p className="text-sm text-gray-500">
+          <div className="flex p-3 bg-[#1f5138] rounded-lg flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <p className="text-sm text-gray-100">
               {sortedProducts.length === 0
                 ? "No results found"
                 : `Showing ${start}-${end} of ${sortedProducts.length} results`}
             </p>
             <div className="hidden lg:flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Sort by :</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-700"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <span className="text-gray-100">Sort by :</span>
+              <SortSelect value={sort} onChange={setSort} className="w-56" />
             </div>
           </div>
 
