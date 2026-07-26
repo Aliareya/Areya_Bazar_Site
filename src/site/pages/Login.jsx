@@ -7,9 +7,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useApi } from "../../context/ApiContext";
 import { toast } from "react-toastify";
 
-// -----------------------------
-// Validation schema (Yup)
-// -----------------------------
 const loginSchema = yup.object().shape({
   email: yup
     .string()
@@ -24,21 +21,18 @@ const loginSchema = yup.object().shape({
 
 export default function Login() {
   const { user, is_login, login, logout } = useAuth();
-  const {apiurl} = useApi();
+  const { apiurl } = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
-
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +42,6 @@ export default function Login() {
       [name]: value,
     }));
 
-    // Remove error when user starts typing
     if (error) {
       setError("");
     }
@@ -68,7 +61,6 @@ export default function Login() {
       return;
     }
 
-
     const payload = {
       email: form.email.trim().toLowerCase(),
       password: form.password,
@@ -77,20 +69,21 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `${apiurl}/auth/login`,
-        {
-          method: "POST",
+      const res = await fetch(`${apiurl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Unexpected response from server. Please try again.");
+      }
 
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await res.json();
       if (!res.ok) {
         const errorMessage = Array.isArray(data?.message)
           ? data.message.join(", ")
@@ -103,18 +96,21 @@ export default function Login() {
         throw new Error("Access token was not returned");
       }
 
-
-      if (data.data) {
-        localStorage.setItem("user", JSON.stringify(data?.data));
-        login(data?.data, data?.token);
-        toast.success(data.message)
+      if (data?.data) {
+        localStorage.setItem("user", JSON.stringify(data.data));
+        login(data.data, data.token);
+        toast.success(data.message || "Logged in successfully");
       }
 
       navigate("/");
     } catch (err) {
-      setError(
-        "Please Try Again Latter"
-      );
+      const message =
+        err instanceof TypeError
+          ? "Could not reach the server. Check your connection and try again."
+          : err.message || "Something went wrong. Please try again.";
+
+      console.error("Login failed:", err);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -127,7 +123,6 @@ export default function Login() {
   return (
     <div className="py-5 flex items-center justify-center bg-gray-100 max-sm:px-3 md:px-5 max-md:px-6 lg:px-10">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg overflow-hidden flex">
-
         {/* ========================= */}
         {/* LEFT IMAGE */}
         {/* ========================= */}
@@ -145,7 +140,6 @@ export default function Login() {
         {/* ========================= */}
 
         <div className="w-full lg:w-1/2 lg:p-8 md:p-6 max-md:p-5 p-3">
-
           {/* Title */}
           <h2 className="text-2xl font-bold text-center text-[#1f5138] mb-2">
             {t("welcomeBack")}
@@ -170,11 +164,7 @@ export default function Login() {
           {/* LOGIN FORM */}
           {/* ========================= */}
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* EMAIL */}
             <input
               type="email"
@@ -189,11 +179,7 @@ export default function Login() {
             {/* PASSWORD */}
             <div className="relative">
               <input
-                type={
-                  showPassword
-                    ? "text"
-                    : "password"
-                }
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder={t("password")}
                 value={form.password}
@@ -205,20 +191,10 @@ export default function Login() {
               {/* Show / Hide Password */}
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword(
-                    (prev) => !prev
-                  )
-                }
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-3 top-2.5 text-gray-500"
               >
-                <Icon
-                  icon={
-                    showPassword
-                      ? "mdi:eye-off"
-                      : "mdi:eye"
-                  }
-                />
+                <Icon icon={showPassword ? "mdi:eye-off" : "mdi:eye"} />
               </button>
             </div>
 
@@ -228,12 +204,8 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-[#1f5138] text-white py-2 rounded-lg disabled:opacity-60"
             >
-              {loading
-                ? t("loggingIn") ||
-                "Logging in..."
-                : t("login")}
+              {loading ? t("loggingIn") || "Logging in..." : t("login")}
             </button>
-
           </form>
 
           {/* ========================= */}
@@ -243,9 +215,7 @@ export default function Login() {
           <div className="flex items-center my-4">
             <hr className="flex-1 border-gray-300" />
 
-            <span className="px-3 text-gray-400 text-sm">
-              {t("or")}
-            </span>
+            <span className="px-3 text-gray-400 text-sm">{t("or")}</span>
 
             <hr className="flex-1 border-gray-300" />
           </div>
@@ -255,13 +225,10 @@ export default function Login() {
           {/* ========================= */}
 
           <div className="flex max-sm:flex-wrap justify-center items-center gap-3">
-
             {/* GOOGLE */}
             <button
               type="button"
-              onClick={() =>
-                handleSocialLogin("google")
-              }
+              onClick={() => handleSocialLogin("google")}
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
               <Icon icon="logos:google-icon" />
@@ -271,9 +238,7 @@ export default function Login() {
             {/* GITHUB */}
             <button
               type="button"
-              onClick={() =>
-                handleSocialLogin("github")
-              }
+              onClick={() => handleSocialLogin("github")}
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
               <Icon icon="mdi:github" />
@@ -283,19 +248,12 @@ export default function Login() {
             {/* FACEBOOK */}
             <button
               type="button"
-              onClick={() =>
-                handleSocialLogin("facebook")
-              }
+              onClick={() => handleSocialLogin("facebook")}
               className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
             >
-              <Icon
-                icon="mdi:facebook"
-                className="text-blue-600"
-              />
-
+              <Icon icon="mdi:facebook" className="text-blue-600" />
               {t("facebook")}
             </button>
-
           </div>
 
           {/* ========================= */}
@@ -304,17 +262,13 @@ export default function Login() {
 
           <p className="text-center text-sm text-gray-500 mt-4">
             {t("dontHaveAccount")}{" "}
-
             <span
-              onClick={() =>
-                navigate("/auth/register")
-              }
+              onClick={() => navigate("/auth/register")}
               className="text-[#1f5138] font-medium cursor-pointer"
             >
               {t("register")}
             </span>
           </p>
-
         </div>
       </div>
     </div>
