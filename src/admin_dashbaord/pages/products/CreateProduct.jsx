@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useNavigate } from 'react-router-dom'
+import { useApi } from '../../../context/ApiContext'
+import { useAuth } from '../../../context/AuthContext'
 
 const CATEGORIES = ['پوشاک', 'لوازم خانه', 'الکترونیک', 'زیبایی', 'ورزش']
 const STATUSES = [
@@ -46,6 +48,7 @@ function generateSku(name) {
 }
 
 export default function CreateProduct({ onCancel, onCreate }) {
+  const {apiurl} = useApi()
   const navigate = useNavigate()
 
   const [form, setForm] = useState(EMPTY_FORM)
@@ -140,6 +143,8 @@ export default function CreateProduct({ onCancel, onCreate }) {
     return Object.keys(next).length === 0
   }
 
+  const {user} = useAuth();
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (!validate()) return
@@ -166,14 +171,13 @@ export default function CreateProduct({ onCancel, onCreate }) {
       formData.append('allowBackorder', String(form.allowBackorder))
       formData.append('status', form.status)
       formData.append('featured', String(form.featured))
+      formData.append('user_id', user.id)
       // Field name here ("image") must match FileInterceptor('image') on the backend
       formData.append('image', image.file, image.file.name)
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${apiurl}/products`, {
         method: 'POST',
         body: formData,
-        // Do NOT set Content-Type manually — the browser sets the correct
-        // multipart/form-data boundary automatically when body is FormData.
       })
 
       if (!response.ok) {
@@ -196,7 +200,7 @@ export default function CreateProduct({ onCancel, onCreate }) {
 
   function handleCancel() {
     if (onCancel) onCancel()
-    else navigate('/products')
+    else navigate('/admin/products')
   }
 
   function handleReset() {

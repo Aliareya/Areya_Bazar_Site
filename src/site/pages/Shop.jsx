@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
+import { useApi } from "../../context/ApiContext";
 
 const API_URL = "http://localhost:3000/products";
 const PAGE_SIZE = 6;
@@ -796,6 +797,7 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
 // -----------------------------------------------------------------------------
 
 export default function Shop() {
+  const {apiurl} = useApi()
   // API
   const [products, setProducts] = useState([]);
 
@@ -838,7 +840,7 @@ export default function Shop() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(API_URL);
+      const response = await fetch(`${apiurl}/products`);
 
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);

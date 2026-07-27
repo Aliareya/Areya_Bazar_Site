@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useParams } from "react-router-dom";
+import { useApi } from "../../../context/ApiContext";
 
 const API_URL = "http://localhost:3000";
 
@@ -66,6 +67,7 @@ function StarRating({ rating = 0, size = 14 }) {
 }
 
 export default function SingleProduct() {
+  const {apiurl} =useApi()
   const { id } = useParams();
 
   const [product, setProduct] = useState(null);
@@ -88,7 +90,7 @@ export default function SingleProduct() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`${API_URL}/products/${id}`);
+        const response = await fetch(`${apiurl}/products/${id}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch product: ${response.status}`);
