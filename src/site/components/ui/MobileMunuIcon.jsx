@@ -49,6 +49,7 @@ function MobileMunuIcon() {
 
   const navigate = useNavigate();
   const { loading, is_login, user, logout } = useAuth();
+  console.log(user)
 
   const menuitems = [
     {
@@ -155,9 +156,8 @@ function MobileMunuIcon() {
       {open && (
         <div
           ref={mobileref}
-          className={`${
-            language === "fa" || language === "ps" ? "-left-2" : "-right-2"
-          } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
+          className={`${language === "fa" || language === "ps" ? "-left-2" : "-right-2"
+            } z-[999] absolute top-[50px] w-72 border border-gray-200 bg-white shadow-lg rounded-md flex flex-col gap-2`}
         >
           {loading ? (
             <UserProfileSkeleton />
@@ -171,12 +171,10 @@ function MobileMunuIcon() {
                   <div className="flex items-center gap-2">
                     {/* Avatar */}
 
-                    <div
-                      className="w-10 h-10 bg-gray-300 rounded-full bg-center bg-cover"
-                      style={{
-                        backgroundImage: `url(${ali})`,
-                      }}
-                    />
+                    {user?.image ? (<div className="w-7 h-7 rounded-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${user?.image})` }}></div>) : (
+                      <Icon icon="mdi:account-circle" className="text-2xl" />
+                    )}
 
                     {/* User Info */}
 
@@ -226,9 +224,8 @@ function MobileMunuIcon() {
                           setOpen(false);
                           setProfileOpen(false);
                         }}
-                        className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${
-                          item.danger ? "text-red-500" : ""
-                        }`}
+                        className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${item.danger ? "text-red-500" : ""
+                          }`}
                       >
                         <Icon icon={item.icon} width={20} height={20} />
 

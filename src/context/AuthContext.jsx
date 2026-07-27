@@ -24,7 +24,7 @@ const checkAuth = async () => {
 
       try {
         const response = await fetch(
-          "https://areya-bazaar-backend.onrender.com/auth/me",
+          "http://localhost:3000/auth/me",
           {
             method: "GET",
             headers: {

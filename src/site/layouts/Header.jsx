@@ -11,11 +11,8 @@ import useLangStore from "../../stores/LangStore";
 import { useTranslation } from "react-i18next";
 
 function Header() {
-    const { user, is_login, loading , checkAuth } = useAuth();
+    const { user, is_login, loading , checkAuth } = useAuth()
 
-    useEffect(()=>{
-        checkAuth()
-    },[])
     const {t}= useTranslation('header');
     const {language} = useLangStore()
     const navigate = useNavigate();
@@ -61,7 +58,7 @@ function Header() {
                         <LanguageIcon />
                     </div>
                     <div className="">
-                        <ProfileIcon is_login={is_login} user={user} />
+                        <ProfileIcon is_login={is_login}/>
                     </div>
                     <div className="lg:hidden ">
                         <MobileMunuIcon />
