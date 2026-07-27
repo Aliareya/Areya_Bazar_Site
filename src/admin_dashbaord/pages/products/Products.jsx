@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Icon } from '@iconify/react'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 // ---- Static data (replace with real API data later) --------------------
 const CATEGORIES = ['همه دسته‌ها', 'پوشاک', 'لوازم خانه', 'الکترونیک', 'زیبایی', 'ورزش']
@@ -121,6 +122,7 @@ function formatPrice(value) {
 }
 
 export default function Products() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState(PRODUCTS)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
@@ -158,7 +160,8 @@ export default function Products() {
           <h1 className="text-xl font-bold text-[#1A1B23]">محصولات</h1>
           <p className="mt-1 text-sm text-black/50">مدیریت محصولات، موجودی و دسته‌بندی‌ها</p>
         </div>
-        <button
+        <button 
+        onClick={()=>navigate('/admin/products/create')}
           type="button"
           className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-600/40"
         >

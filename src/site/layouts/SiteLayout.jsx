@@ -11,6 +11,7 @@ import About from '../pages/About';
 import Contact from '../pages/Contact';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
+import SingleProduct from '../pages/singleproduct/SingleProduct';
 
 
 function SiteLayout() {
@@ -23,9 +24,8 @@ function SiteLayout() {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/shop' element={<Shop />} />
+        <Route path='/shop/:id' element={<SingleProduct />} />
         <Route path='/about' element={< About />} />
-        <Route path='/contact' element={<Contact />} />
-        <Route path='/contact' element={<Contact />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/auth/login' element={<Login />} />
         <Route path='/auth/register' element={<Register />} />
