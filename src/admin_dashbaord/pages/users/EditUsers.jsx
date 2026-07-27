@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '@iconify/react'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useApi } from '../../../context/ApiContext'
 
 const API_URL = 'http://localhost:3000/users'
 
@@ -25,6 +26,7 @@ function formatDate(iso) {
 }
 
 export default function UserEdit({ onCancel, onSave }) {
+  const {apiurl} = useApi()
   const { id } = useParams()
   const navigate = useNavigate()
   const token = localStorage.getItem('accessToken')
@@ -105,7 +107,7 @@ export default function UserEdit({ onCancel, onSave }) {
 
     setSaving(true)
     try {
-      const res = await axios.put(`${API_URL}/${id}`, payload, {
+      const res = await axios.put(`${apiurl}/users/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setForm((prev) => ({ ...prev, ...res.data?.data, ...res.data }))
@@ -129,7 +131,7 @@ export default function UserEdit({ onCancel, onSave }) {
   async function handleDelete() {
     setDeleting(true)
     try {
-      await axios.delete(`${API_URL}/${id}`, {
+      await axios.delete(`${apiurl}/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       navigate('/users')
@@ -159,7 +161,7 @@ export default function UserEdit({ onCancel, onSave }) {
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await axios.post(`${API_URL}/upload-profile/${id}`, formData, {
+      const res = await axios.post(`${apiurl}/users/upload-profile/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

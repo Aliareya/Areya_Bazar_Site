@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '@iconify/react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { useApi } from '../../../context/ApiContext'
 
 const API_URL = 'http://localhost:3000/users'
 const ROLE_LABELS = {
@@ -65,6 +66,7 @@ export default function Users() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const {apiurl} = useApi()
 
   const [search, setSearch] = useState('')
   const [role, setRole] = useState(ALL_ROLES_OPTION)
@@ -82,7 +84,7 @@ export default function Users() {
       setLoading(true)
       setError('')
       try {
-        const response = await axios.get(API_URL, {
+        const response = await axios.get(`${apiurl}/users`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setUsers(response.data || [])
@@ -133,7 +135,7 @@ export default function Users() {
   async function removeUser(id) {
     setDeletingId(id)
     try {
-      await axios.delete(`${API_URL}/${id}`, {
+      await axios.delete(`${apiurl}/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setUsers((prev) => prev.filter((u) => u.id !== id))
