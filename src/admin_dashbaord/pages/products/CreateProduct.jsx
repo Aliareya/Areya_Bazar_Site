@@ -179,9 +179,11 @@ export default function CreateProduct({ onCancel, onCreate }) {
         method: 'POST',
         body: formData,
       })
+      console.log(response )
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => null)
+        console.log(response , errorBody)
         const message =
           (Array.isArray(errorBody?.message) ? errorBody.message.join('، ') : errorBody?.message) ||
           'ثبت محصول با خطا مواجه شد'

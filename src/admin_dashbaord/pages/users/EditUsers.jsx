@@ -56,7 +56,7 @@ export default function UserEdit({ onCancel, onSave }) {
       setLoading(true)
       setLoadError('')
       try {
-        const res = await axios.get(`${API_URL}/${id}`, {
+        const res = await axios.get(`${apiurl}/users/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setForm(res.data)
