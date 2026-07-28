@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../context/ApiContext";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 const API_URL = "http://localhost:3000/products";
 const PAGE_SIZE = 6;
@@ -123,9 +125,8 @@ function FilterSection({ title, children, defaultOpen = true }) {
 
         <Icon
           icon="mdi:chevron-down"
-          className={`w-4 h-4 text-white/50 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`w-4 h-4 text-white/50 transition-transform ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -273,10 +274,10 @@ function ProductCard({
   const sellerName = getSellerName(seller);
 
   return (
-    <div  className="bg-white cursor-pointer rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
+    <div className="bg-white cursor-pointer rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
       {/* Product Image */}
-      <div  
-       className="relative rounded-xl overflow-hidden bg-gray-100">
+      <div
+        className="relative rounded-xl overflow-hidden bg-gray-100">
         {discount && (
           <span className="absolute top-3 left-3 z-10 bg-green-700 text-white text-xs font-medium px-2.5 py-1 rounded-full">
             {discount}% off
@@ -298,15 +299,14 @@ function ProductCard({
         {/* Action Buttons */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
           <button
-            onClick={() => onToggleWishlist(product.id)}
+            onClick={() => onToggleWishlist(product)}
             aria-label="Add to wishlist"
             className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow hover:bg-white"
           >
             <Icon
               icon={wishlisted ? "mdi:heart" : "mdi:heart-outline"}
-              className={`w-4 h-4 ${
-                wishlisted ? "text-red-500" : "text-gray-700"
-              }`}
+              className={`w-4 h-4 ${wishlisted ? "text-red-500" : "text-gray-700"
+                }`}
             />
           </button>
 
@@ -328,7 +328,7 @@ function ProductCard({
           </button>
         </div>
 
-        <img onClick={()=>navigate(`/shop/${product.id}`)}
+        <img onClick={() => navigate(`/shop/${product.id}`)}
           src={
             product.image || "https://via.placeholder.com/500x500?text=No+Image"
           }
@@ -341,7 +341,7 @@ function ProductCard({
         />
       </div>
 
-     
+
 
       {/* Category / Brand */}
       <div className="pt-3 flex items-center justify-between text-sm">
@@ -355,7 +355,7 @@ function ProductCard({
       </div>
 
       {/* Product Name */}
-      <h3 onClick={()=>navigate(`/shop/${product.id}`)} className="font-semibold text-gray-900 mt-1 line-clamp-1">
+      <h3 onClick={() => navigate(`/shop/${product.id}`)} className="font-semibold text-gray-900 mt-1 line-clamp-1">
         {product.name}
       </h3>
 
@@ -369,7 +369,7 @@ function ProductCard({
       {/* Price */}
       <div className="flex items-center gap-2 mt-2">
         <span className="font-semibold text-gray-900">
-          ${Number(product.price || 0).toFixed(2)}
+          {Number(product.price || 0).toFixed(2)} AFN
         </span>
 
         {Number(product.compareAtPrice) > Number(product.price) && (
@@ -378,8 +378,8 @@ function ProductCard({
           </span>
         )}
       </div>
-      
-       {/* Seller Profile */}
+
+      {/* Seller Profile */}
       <div className="flex items-center gap-2.5 mt-4 ">
         <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
           {seller?.image ? (
@@ -484,11 +484,10 @@ function FilterContent({
                       category: active ? null : category,
                     }))
                   }
-                  className={`w-full text-left px-3 py-1.5 rounded-lg border-l-2 ${
-                    active
-                      ? "border-orange-400 bg-white/10 text-white font-medium"
-                      : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
-                  }`}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg border-l-2 ${active
+                    ? "border-orange-400 bg-white/10 text-white font-medium"
+                    : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
+                    }`}
                 >
                   {category}
                 </button>
@@ -518,11 +517,10 @@ function FilterContent({
                         brand: active ? null : brand,
                       }))
                     }
-                    className={`w-full text-left px-3 py-1.5 rounded-lg border-l-2 ${
-                      active
-                        ? "border-orange-400 bg-white/10 text-white font-medium"
-                        : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
-                    }`}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg border-l-2 ${active
+                      ? "border-orange-400 bg-white/10 text-white font-medium"
+                      : "border-transparent text-white/70 hover:bg-white/5 hover:text-white"
+                      }`}
                   >
                     {brand}
                   </button>
@@ -559,11 +557,10 @@ function FilterContent({
                 <button
                   key={tag}
                   onClick={() => toggleArrayValue("tags", tag)}
-                  className={`px-2.5 py-1 rounded-full text-xs border ${
-                    active
-                      ? "bg-orange-500 border-orange-500 text-white"
-                      : "border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                  }`}
+                  className={`px-2.5 py-1 rounded-full text-xs border ${active
+                    ? "bg-orange-500 border-orange-500 text-white"
+                    : "border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
                 >
                   {tag}
                 </button>
@@ -630,21 +627,18 @@ function FilterSidebar(props) {
 function MobileFilterDrawer({ open, onClose, ...props }) {
   return (
     <div
-      className={`fixed inset-0 z-50 lg:hidden ${
-        open ? "visible" : "invisible"
-      }`}
+      className={`fixed inset-0 z-50 lg:hidden ${open ? "visible" : "invisible"
+        }`}
     >
       <div
-        className={`absolute inset-0 bg-black/50 transition-opacity ${
-          open ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 bg-black/50 transition-opacity ${open ? "opacity-100" : "opacity-0"
+          }`}
         onClick={onClose}
       />
 
       <div
-        className={`absolute bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl flex flex-col transition-transform duration-300 ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
+        className={`absolute bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl flex flex-col transition-transform duration-300 ${open ? "translate-y-0" : "translate-y-full"
+          }`}
         style={{
           background: FILTER_BG,
         }}
@@ -797,7 +791,9 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
 // -----------------------------------------------------------------------------
 
 export default function Shop() {
-  const {apiurl} = useApi()
+  const { cart, setCart } = useCart()
+  const { isInWishlist, toggleWishlist: toggleWishlistItem } = useWishlist()
+  const { apiurl } = useApi()
   // API
   const [products, setProducts] = useState([]);
 
@@ -819,10 +815,6 @@ export default function Shop() {
 
   const [page, setPage] = useState(1);
 
-  const [wishlist, setWishlist] = useState([]);
-
-  const [cartCount, setCartCount] = useState(0);
-
   const [toast, setToast] = useState("");
 
   const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -830,6 +822,15 @@ export default function Shop() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const toastTimer = useRef(null);
+
+  // ---------------------------------------------------------------------------
+  // Cart count (derived from shared CartContext)
+  // ---------------------------------------------------------------------------
+
+  const cartCount = useMemo(
+    () => cart.reduce((sum, item) => sum + (item.qty || 0), 0),
+    [cart],
+  );
 
   // ---------------------------------------------------------------------------
   // Fetch products
@@ -1065,12 +1066,10 @@ export default function Shop() {
   // Wishlist
   // ---------------------------------------------------------------------------
 
-  const toggleWishlist = (productId) => {
-    const exists = wishlist.includes(productId);
+  const toggleWishlist = (product) => {
+    const exists = isInWishlist(product.id);
 
-    setWishlist((prev) =>
-      exists ? prev.filter((id) => id !== productId) : [...prev, productId],
-    );
+    toggleWishlistItem(product);
 
     showToast(exists ? "Removed from wishlist" : "Added to wishlist");
   };
@@ -1086,7 +1085,34 @@ export default function Shop() {
       return;
     }
 
-    setCartCount((count) => count + 1);
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, qty: item.qty + 1 }
+            : item
+        );
+      }
+
+      return [
+        ...prevCart,
+        {
+          id: product.id,
+          name: product.name,
+          image: product.image,
+          price: product.price,
+          compareAtPrice: product.compareAtPrice,
+          sku: product.sku,
+          brand: product.brand,
+          category: product.category,
+          stock: product.stock,
+          allowBackorder: product.allowBackorder,
+          qty: 1,
+        },
+      ];
+    });
 
     showToast(`${product.name} added to cart`);
   };
@@ -1340,7 +1366,7 @@ export default function Shop() {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    wishlisted={wishlist.includes(product.id)}
+                    wishlisted={isInWishlist(product.id)}
                     onToggleWishlist={toggleWishlist}
                     onQuickView={setQuickViewProduct}
                     onAddToCart={addToCart}
@@ -1388,11 +1414,10 @@ export default function Shop() {
                   <button
                     key={number}
                     onClick={() => setPage(number)}
-                    className={`w-9 h-9 rounded-lg ${
-                      currentPage === number
-                        ? "bg-orange-500 text-white"
-                        : "border text-gray-600"
-                    }`}
+                    className={`w-9 h-9 rounded-lg ${currentPage === number
+                      ? "bg-orange-500 text-white"
+                      : "border text-gray-600"
+                      }`}
                   >
                     {number}
                   </button>

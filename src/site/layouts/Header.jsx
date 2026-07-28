@@ -9,12 +9,16 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import useLangStore from "../../stores/LangStore";
 import { useTranslation } from "react-i18next";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 function Header() {
-    const { user, is_login, loading , checkAuth } = useAuth()
+    const { cart } = useCart()
+    const { wishlist } = useWishlist()
+    const { user, is_login, loading, checkAuth } = useAuth()
 
-    const {t}= useTranslation('header');
-    const {language} = useLangStore()
+    const { t } = useTranslation('header');
+    const { language } = useLangStore()
     const navigate = useNavigate();
     const headerMenu = [
         { label: "home", url: "/" },
@@ -29,12 +33,12 @@ function Header() {
 
     return (
         <div className=" !z-40 sticky top-0 mx-auto bg-white shadow-md">
-            <header className={`${language === 'fa' || language === 'ps' ? 'flex-row-reverse':''} max-w-7xl mx-auto h-[70px] flex justify-between items-center  xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3`}>
+            <header className={`${language === 'fa' || language === 'ps' ? 'flex-row-reverse' : ''} max-w-7xl mx-auto h-[70px] flex justify-between items-center  xl:px-10 lg:px-6 md:px-3 max-md:px-5 max-sm:px-3`}>
                 <div className="">
                     <img className="w-auto xl:h-26 md:h-24 max-md:h-24 max-sm:h-20 lg:h-[85px] object-contain" src={logo} alt="" />
                 </div>
 
-                <div className={` items-center xl:gap-8 lg:gap-6 hidden lg:flex ${language === 'fa' || language === 'ps' ? 'flex-row-reverse':''}`}>
+                <div className={` items-center xl:gap-8 lg:gap-6 hidden lg:flex ${language === 'fa' || language === 'ps' ? 'flex-row-reverse' : ''}`}>
                     {headerMenu?.map((item, index) => (
                         <li onClick={() => handleClickMenuItem(item.url)}
                             key={index} className="cursor-pointer hover:font-semibold text-[#1f5138] list-none text-base font-normal">
@@ -43,12 +47,31 @@ function Header() {
                     ))}
                 </div>
 
-                <div className={`${language === 'fa' || language === 'ps' ? 'flex-row-reverse':''} flex items-center justify-between lg:gap-1 md:gap-2 max-md:gap-2 max-sm:`}>
-                    <span className="hover:bg-gray-100 cursor-pointer p-1 rounded-full">
-                        <Icon icon="mdi:cart" width="22" height="22" color="#1f5138" />
+                <div className={`${language === 'fa' || language === 'ps' ? 'flex-row-reverse' : ''} flex items-center justify-between lg:gap-1 md:gap-2 max-md:gap-2 max-sm:`}>
+                    <span
+                        onClick={() => navigate('/cart')}
+                        className="relative inline-flex cursor-pointer rounded-full p-1.5 hover:bg-gray-100 transition"
+                    >
+                        <Icon icon="mdi:cart-outline" width="22" height="22" color="#1f5138" />
+
+                        {cart.length > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e0a638] text-[10px] font-semibold text-white">
+                                {cart.reduce((sum, item) => sum + item.qty, 0)}
+                            </span>
+                        )}
                     </span>
-                    <span className="hover:bg-gray-100 cursor-pointer p-1 rounded-full">
+
+                    <span
+                        onClick={() => navigate('/wishlist')}
+                        className="relative inline-flex cursor-pointer rounded-full p-1.5 hover:bg-gray-100 transition"
+                    >
                         <Icon icon="line-md:heart" width="22" height="22" color="#1f5138" />
+
+                        {wishlist.length > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#e0a638] text-[10px] font-semibold text-white">
+                                {wishlist.length}
+                            </span>
+                        )}
                     </span>
 
                     <div className={`${is_login ? ' max-sm:hidden' : 'flex'}`}>
@@ -58,7 +81,7 @@ function Header() {
                         <LanguageIcon />
                     </div>
                     <div className="">
-                        <ProfileIcon is_login={is_login}/>
+                        <ProfileIcon is_login={is_login} />
                     </div>
                     <div className="lg:hidden ">
                         <MobileMunuIcon />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useParams } from "react-router-dom";
 import { useApi } from "../../../context/ApiContext";
+import { useCart } from "../../../context/CartContext";
 
 const API_URL = "http://localhost:3000";
 
@@ -10,7 +11,7 @@ function formatPrice(price) {
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "AFN",
   }).format(Number(price));
 }
 
@@ -67,7 +68,8 @@ function StarRating({ rating = 0, size = 14 }) {
 }
 
 export default function SingleProduct() {
-  const {apiurl} =useApi()
+  const { cart, setCart } = useCart();
+  const { apiurl } = useApi();
   const { id } = useParams();
 
   const [product, setProduct] = useState(null);
@@ -77,6 +79,7 @@ export default function SingleProduct() {
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [addedMessage, setAddedMessage] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -110,9 +113,6 @@ export default function SingleProduct() {
     fetchProduct();
   }, [id]);
 
-  // -----------------------------
-  // Loading State
-  // -----------------------------
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fbfaf7]">
@@ -132,9 +132,6 @@ export default function SingleProduct() {
     );
   }
 
-  // -----------------------------
-  // Error State
-  // -----------------------------
   if (error || !product) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fbfaf7] px-4">
@@ -157,10 +154,6 @@ export default function SingleProduct() {
       </div>
     );
   }
-
-  // -----------------------------
-  // Product Data
-  // -----------------------------
 
   const {
     name,
@@ -204,10 +197,48 @@ export default function SingleProduct() {
     allowBackorder ||
     qty < Number(stock || 0);
 
+  // ===================== Add To Cart =====================
+  const handleAddToCart = () => {
+    if (!isInStock) return;
+
+    setCart((prevCart) => {
+      const existingItem = prevCart.find(
+        (item) => item.id === product.id
+      );
+
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, qty: item.qty + qty }
+            : item
+        );
+      }
+
+      return [
+        ...prevCart,
+        {
+          id: product.id,
+          name,
+          image,
+          price,
+          compareAtPrice,
+          sku,
+          brand,
+          category,
+          stock,
+          trackInventory,
+          qty,
+        },
+      ];
+    });
+
+    setAddedMessage(`${name} added to cart!`);
+    setTimeout(() => setAddedMessage(""), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#fbfaf7] font-sans text-[#2c2c2c]">
 
-      {/* ===================== Page Header ===================== */}
       <div className="relative overflow-hidden bg-[#f6f4ef] py-10 text-center">
         <h1 className="text-3xl font-semibold tracking-wide text-[#1f2d24]">
           Shop
@@ -430,6 +461,7 @@ export default function SingleProduct() {
             <div className="mt-6 flex flex-wrap items-center gap-3">
 
               <button
+                onClick={handleAddToCart}
                 disabled={!isInStock}
                 className="flex items-center gap-2 rounded-md bg-[#3f5d45] px-6 py-2.5 text-sm font-medium text-white transition hover:bg-[#334c39] disabled:cursor-not-allowed disabled:bg-gray-300"
               >
@@ -470,6 +502,13 @@ export default function SingleProduct() {
               </button>
 
             </div>
+
+            {/* Added to cart feedback message */}
+            {addedMessage && (
+              <p className="mt-3 text-sm font-medium text-[#3f5d45]">
+                {addedMessage}
+              </p>
+            )}
 
             {/* ===================== Product Meta ===================== */}
             <div className="mt-7 space-y-3 border-t border-gray-200 pt-6 text-sm text-gray-500">
@@ -793,4 +832,3 @@ export default function SingleProduct() {
     </div>
   );
 }
-

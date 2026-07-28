@@ -12,6 +12,9 @@ import Contact from '../pages/Contact';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import SingleProduct from '../pages/singleproduct/SingleProduct';
+import Cart from '../pages/cart/Cart';
+import Wishlist from '../pages/wishlist/Wishlist';
+import Checkout from '../pages/checkout/Checkout';
 
 
 function SiteLayout() {
@@ -26,6 +29,9 @@ function SiteLayout() {
         <Route path='/shop' element={<Shop />} />
         <Route path='/shop/:id' element={<SingleProduct />} />
         <Route path='/about' element={< About />} />
+        <Route path='/cart' element={< Cart />} />
+        <Route path='/wishlist' element={< Wishlist />} />
+        <Route path='/checkout' element={< Checkout />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/auth/login' element={<Login />} />
         <Route path='/auth/register' element={<Register />} />
