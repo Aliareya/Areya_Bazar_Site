@@ -7,6 +7,7 @@ import {
 import { AuthProvider } from './context/AuthContext'
 import { ToastContainer } from 'react-toastify'
 import { ApiProvider } from './context/ApiContext'
+import { CartProvider } from './context/CartContext'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -25,17 +26,19 @@ function App() {
 
       <AuthProvider>
         <ApiProvider>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            pauseOnHover
-            theme="light"
-          />
+          <CartProvider>
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              pauseOnHover
+              theme="light"
+            />
 
-          <AppLayout />
+            <AppLayout />
+          </CartProvider>
         </ApiProvider>
       </AuthProvider>
     </BrowserRouter>

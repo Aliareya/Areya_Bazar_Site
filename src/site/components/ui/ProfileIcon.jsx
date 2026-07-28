@@ -36,7 +36,6 @@ function ProfileIcon() {
   const { t } = useTranslation("header");
   const { t: c } = useTranslation("common");
   const { loading, is_login, user, logout } = useAuth();
-  console.log(user)
   const { language: lang } = useLangStore();
   const navigate = useNavigate();
 

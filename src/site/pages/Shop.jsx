@@ -273,9 +273,9 @@ function ProductCard({
   const sellerName = getSellerName(seller);
 
   return (
-    <div onClick={()=>navigate(`/shop/${product.id}`)} className="bg-white cursor-pointer rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
+    <div  className="bg-white cursor-pointer rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
       {/* Product Image */}
-      <div onClick={()=>navigate(`/shop/${product.id}`)} 
+      <div  
        className="relative rounded-xl overflow-hidden bg-gray-100">
         {discount && (
           <span className="absolute top-3 left-3 z-10 bg-green-700 text-white text-xs font-medium px-2.5 py-1 rounded-full">
@@ -328,7 +328,7 @@ function ProductCard({
           </button>
         </div>
 
-        <img
+        <img onClick={()=>navigate(`/shop/${product.id}`)}
           src={
             product.image || "https://via.placeholder.com/500x500?text=No+Image"
           }

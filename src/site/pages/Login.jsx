@@ -97,7 +97,6 @@ export default function Login() {
       }
 
       if (data?.data) {
-        localStorage.setItem("user", JSON.stringify(data.data));
         login(data.data, data.token);
         toast.success(data.message || "Logged in successfully");
       }

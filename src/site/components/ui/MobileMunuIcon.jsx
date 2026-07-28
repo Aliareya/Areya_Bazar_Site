@@ -49,7 +49,6 @@ function MobileMunuIcon() {
 
   const navigate = useNavigate();
   const { loading, is_login, user, logout } = useAuth();
-  console.log(user)
 
   const menuitems = [
     {

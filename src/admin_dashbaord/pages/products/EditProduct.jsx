@@ -2,384 +2,503 @@ import React, { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-const CATEGORIES = ['پوشاک', 'لوازم خانه', 'الکترونیک', 'زیبایی', 'ورزش']
+const API_BASE = 'http://localhost:3000'
 
-// Same static catalogue as ProductsPage — replace both with a real API call
-// (GET /products/:id) once your products endpoint exists.
-const PRODUCTS = [
-  { id: 1, name: 'کیف چرم دستدوز', category: 'پوشاک', price: 1250000, compareAtPrice: null, stock: 24, rating: 4.6, sku: 'BAG-1042', description: 'کیف چرم طبیعی دستدوز با روکش داخلی مخمل و بند قابل تنظیم.', image: 'https://picsum.photos/seed/bag1/400/300', createdAt: '2026-03-02T09:12:00.000Z' },
-  { id: 2, name: 'هدفون بی‌سیم نویز کنسلینگ', category: 'الکترونیک', price: 3480000, compareAtPrice: 3990000, stock: 8, rating: 4.8, sku: 'AUD-2093', description: 'هدفون بی‌سیم با حذف نویز فعال و باتری ۳۰ ساعته.', image: 'https://picsum.photos/seed/headphone/400/300', createdAt: '2026-01-18T09:12:00.000Z' },
-  { id: 3, name: 'مجموعه ظروف سرامیکی', category: 'لوازم خانه', price: 890000, compareAtPrice: null, stock: 0, rating: 4.2, sku: 'HOME-3311', description: 'ست ۶ پارچه ظروف سرامیکی مناسب مایکروویو و ماشین ظرفشویی.', image: 'https://picsum.photos/seed/ceramics/400/300', createdAt: '2025-12-05T09:12:00.000Z' },
+const CATEGORIES = ['پوشاک', 'لوازم خانه', 'الکترونیک', 'زیبایی', 'ورزش']
+const STATUS_OPTIONS = [
+  { value: 'active', label: 'فعال' },
+  { value: 'inactive', label: 'غیرفعال' },
+  { value: 'draft', label: 'پیش‌نویس' },
 ]
 
-function formatPreviewPrice(value) {
-  const num = Number(value)
-  if (!value || Number.isNaN(num)) return '۰ تومان'
-  return new Intl.NumberFormat('fa-IR').format(num) + ' تومان'
+const EMPTY_FORM = {
+  name: '',
+  category: CATEGORIES[0],
+  brand: '',
+  sku: '',
+  barcode: '',
+  tags: '',
+  shortDescription: '',
+  description: '',
+  price: '',
+  compareAtPrice: '',
+  costPrice: '',
+  trackInventory: true,
+  stock: '',
+  lowStockThreshold: '',
+  allowBackorder: false,
+  status: 'active',
+  featured: false,
+  image: '',
 }
 
-function formatDate(iso) {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-  } catch {
-    return '—'
-  }
-}
-
-export default function ProductEdit({ product, onCancel, onSave }) {
+export default function EditProduct() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [form, setForm] = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState('')
-  const [errors, setErrors] = useState({})
+  const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+  const [imagePreview, setImagePreview] = useState('')
+  const [imageFile, setImageFile] = useState(null)
 
   useEffect(() => {
-    // Swap this block for: axios.get(`/products/${id}`)
-    setLoading(true)
-    setLoadError('')
-    const found = product || PRODUCTS.find((p) => String(p.id) === String(id))
-    if (found) {
-      setForm({ ...found })
-      setImagePreview(found.image)
-    } else {
-      setLoadError('محصول مورد نظر پیدا نشد')
-    }
-    setLoading(false)
-  }, [id, product])
+    fetchProduct()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
-  function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setSaved(false)
+  async function fetchProduct() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/products/${id}`)
+      if (!res.ok) throw new Error(`خطا در دریافت محصول (${res.status})`)
+      const data = await res.json()
+      const p = data.product || data
+
+      setForm({
+        name: p.name || '',
+        category: p.category || CATEGORIES[0],
+        brand: p.brand || '',
+        sku: p.sku || '',
+        barcode: p.barcode || '',
+        tags: Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || ''),
+        shortDescription: p.shortDescription || '',
+        description: p.description || '',
+        price: p.price ?? '',
+        compareAtPrice: p.compareAtPrice ?? '',
+        costPrice: p.costPrice ?? '',
+        trackInventory: !!p.trackInventory,
+        stock: p.stock ?? '',
+        lowStockThreshold: p.lowStockThreshold ?? '',
+        allowBackorder: !!p.allowBackorder,
+        status: p.status || 'active',
+        featured: !!p.featured,
+        image: p.image || '',
+      })
+      setImagePreview(p.image || '')
+    } catch (err) {
+      setError(err.message || 'خطا در ارتباط با سرور')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function updateField(key, value) {
+    setForm((f) => ({ ...f, [key]: value }))
   }
 
   function handleImageChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setErrors((prev) => ({ ...prev, image: 'فقط فایل تصویری مجاز است' }))
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = () => setImagePreview(reader.result)
-    reader.readAsDataURL(file)
-    setErrors((prev) => ({ ...prev, image: undefined }))
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
-  function validate() {
-    const next = {}
-    if (!form.name.trim()) next.name = 'وارد کردن نام محصول الزامی است'
-    if (!form.sku.trim()) next.sku = 'وارد کردن کد محصول الزامی است'
+  // Uploads a new image via the dedicated PATCH /products/:id/image route.
+  // Returns the new image URL from the response.
+  async function uploadProductImage(file) {
+    const fd = new FormData()
+    fd.append('image', file)
 
-    if (!form.price) next.price = 'وارد کردن قیمت الزامی است'
-    else if (Number(form.price) <= 0) next.price = 'قیمت باید بزرگتر از صفر باشد'
+    const res = await fetch(`${API_BASE}/products/${id}/image`, {
+      method: 'PATCH',
+      body: fd, // no Content-Type header — browser sets the multipart boundary
+    })
 
-    if (form.compareAtPrice && Number(form.compareAtPrice) <= Number(form.price)) {
-      next.compareAtPrice = 'قیمت قبل از تخفیف باید بیشتر از قیمت فروش باشد'
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null)
+      throw new Error(errBody?.message || `آپلود تصویر با خطا مواجه شد (${res.status})`)
     }
 
-    if (form.stock === '') next.stock = 'وارد کردن موجودی الزامی است'
-    else if (Number(form.stock) < 0) next.stock = 'موجودی نمی‌تواند منفی باشد'
-
-    setErrors((prev) => ({ ...prev, ...next }))
-    return Object.keys(next).length === 0
+    const data = await res.json()
+    return data.product?.image || data.image
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (!validate()) return
-
     setSaving(true)
-    // Swap this block for: await axios.patch(`/products/${id}`, payload)
-    const payload = {
-      ...form,
-      price: Number(form.price),
-      compareAtPrice: form.compareAtPrice ? Number(form.compareAtPrice) : null,
-      stock: Number(form.stock),
-      image: imagePreview,
-    }
+    setSaveError(null)
 
-    setTimeout(() => {
+    try {
+      let imageUrl = form.image
+
+      // 1) If a new image file was selected, upload it first through the
+      //    dedicated image route, so the image and the rest of the fields
+      //    are handled by two focused endpoints instead of one big multipart PATCH.
+      if (imageFile) {
+        imageUrl = await uploadProductImage(imageFile)
+      }
+
+      // 2) Save the rest of the product fields as plain JSON.
+      const payload = {
+        name: form.name,
+        category: form.category,
+        brand: form.brand || null,
+        sku: form.sku,
+        barcode: form.barcode,
+        tags: form.tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+        shortDescription: form.shortDescription,
+        description: form.description,
+        price: Number(form.price) || 0,
+        compareAtPrice: form.compareAtPrice === '' ? null : Number(form.compareAtPrice),
+        costPrice: form.costPrice === '' ? null : Number(form.costPrice),
+        trackInventory: form.trackInventory,
+        stock: Number(form.stock) || 0,
+        lowStockThreshold: Number(form.lowStockThreshold) || 0,
+        allowBackorder: form.allowBackorder,
+        status: form.status,
+        featured: form.featured,
+        // Only send image if we don't already have a separate image route handling it.
+        // Sending it here too is harmless (backend just overwrites with the same value),
+        // but you can drop this line if you'd rather keep image updates fully separate.
+        image: imageUrl,
+      }
+
+      const res = await fetch(`${API_BASE}/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null)
+        throw new Error(errBody?.message || `ذخیره تغییرات با خطا مواجه شد (${res.status})`)
+      }
+
+      navigate('/admin/products')
+    } catch (err) {
+      setSaveError(err.message || 'خطا در ذخیره‌سازی')
+    } finally {
       setSaving(false)
-      setSaved(true)
-      onSave?.(payload)
-    }, 700)
-  }
-
-  function handleCancel() {
-    if (onCancel) onCancel()
-    else navigate('/products')
-  }
-
-  function handleDelete() {
-    setDeleting(true)
-    // Swap this block for: await axios.delete(`/products/${id}`)
-    setTimeout(() => {
-      navigate('/products')
-    }, 600)
+    }
   }
 
   if (loading) {
     return (
-      <div dir="rtl" className="flex items-center justify-center py-24 text-black/40">
-        <Icon icon="mdi:loading" className="me-2 h-6 w-6 animate-spin text-violet-500" />
-        در حال بارگذاری اطلاعات محصول...
+      <div dir="rtl" className="flex h-64 items-center justify-center text-black/40">
+        <Icon icon="mdi:loading" className="ml-2 h-5 w-5 animate-spin" />
+        در حال بارگذاری محصول...
       </div>
     )
   }
 
-  if (loadError || !form) {
+  if (error) {
     return (
-      <div dir="rtl" className="space-y-4">
-        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <Icon icon="mdi:alert-circle-outline" className="h-5 w-5 shrink-0" />
-          {loadError || 'محصول مورد نظر پیدا نشد'}
+      <div dir="rtl" className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-center text-rose-700">
+        <Icon icon="mdi:alert-circle-outline" className="mx-auto mb-2 h-8 w-8" />
+        {error}
+        <div>
+          <button
+            onClick={fetchProduct}
+            className="mt-3 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+          >
+            تلاش مجدد
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/products')}
-          className="inline-flex items-center gap-1.5 text-sm text-black/45 transition hover:text-[#1A1B23]"
-        >
-          <Icon icon="mdi:arrow-right" className="h-4 w-4" />
-          بازگشت به محصولات
-        </button>
       </div>
     )
   }
+
+  const inputClass =
+    'w-full rounded-lg border border-black/10 bg-[#F4F5F7] px-3 py-2 text-sm text-[#1A1B23] placeholder:text-black/35 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20'
+  const labelClass = 'mb-1.5 block text-sm font-medium text-black/70'
 
   return (
     <div dir="rtl" className="space-y-5">
-      {/* Header */}
+      {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleCancel}
-            className="mb-2 inline-flex items-center gap-1.5 text-sm text-black/45 transition hover:text-[#1A1B23]"
+            onClick={() => navigate('/admin/products')}
+            className="rounded-lg p-2 text-black/50 transition hover:bg-black/5"
           >
-            <Icon icon="mdi:arrow-right" className="h-4 w-4" />
-            بازگشت به محصولات
+            <Icon icon="mdi:arrow-right" className="h-5 w-5" />
           </button>
-          <h1 className="text-xl font-bold text-[#1A1B23]">ویرایش محصول</h1>
-          <p className="mt-1 text-sm text-black/50">به‌روزرسانی اطلاعات {form.name}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="rounded-lg border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-[#1A1B23] transition hover:bg-black/[0.03]"
-          >
-            انصراف
-          </button>
-          <button
-            type="submit"
-            form="edit-product-form"
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60"
-          >
-            {saving ? (
-              <Icon icon="mdi:loading" className="h-4 w-4 animate-spin" />
-            ) : (
-              <Icon icon="mdi:content-save-outline" className="h-4 w-4" />
-            )}
-            {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-          </button>
+          <div>
+            <h1 className="text-xl font-bold text-[#1A1B23]">ویرایش محصول</h1>
+            <p className="mt-1 text-sm text-black/50">اطلاعات محصول را ویرایش و ذخیره کنید</p>
+          </div>
         </div>
       </div>
 
-      {saved && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <Icon icon="mdi:check-circle-outline" className="h-5 w-5 shrink-0" />
-          تغییرات با موفقیت ذخیره شد
+      {saveError && (
+        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <Icon icon="mdi:alert-circle-outline" className="h-5 w-5 shrink-0" />
+          {saveError}
         </div>
       )}
 
-      <form id="edit-product-form" onSubmit={handleSubmit} className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* Left column: image + meta + danger zone */}
-        <div className="space-y-5 lg:col-span-1">
-          <div className="rounded-lg border border-black/10 bg-white p-5">
-            <h2 className="mb-3 text-sm font-semibold text-[#1A1B23]">تصویر محصول</h2>
-
-            <label
-              htmlFor="product-image"
-              className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border border-dashed border-black/15 bg-[#F4F5F7] text-black/40 transition hover:border-violet-300 hover:text-violet-500"
-            >
-              {imagePreview ? (
-                <img src={imagePreview} alt={form.name} className="h-full w-full object-cover" />
-              ) : (
-                <>
-                  <Icon icon="mdi:image-plus-outline" className="h-9 w-9" />
-                  <span className="text-xs">برای آپلود تصویر کلیک کنید</span>
-                </>
-              )}
-            </label>
-            <input id="product-image" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-            {errors.image && <p className="mt-2 text-xs text-rose-600">{errors.image}</p>}
-
-            <div className="mt-4 border-t border-black/10 pt-4 text-xs text-black/45">
-              <div className="flex items-center justify-between py-1">
-                <span>شناسه محصول</span>
-                <span className="font-mono text-black/60">#{form.id}</span>
-              </div>
-              <div className="flex items-center justify-between py-1">
-                <span>امتیاز کاربران</span>
-                <span className="flex items-center gap-1 text-black/60">
-                  <Icon icon="mdi:star" className="h-3.5 w-3.5 text-amber-500" />
-                  {form.rating ?? '—'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-1">
-                <span>تاریخ ثبت</span>
-                <span className="text-black/60">{formatDate(form.createdAt)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-rose-200 bg-white p-5">
-            <p className="flex items-center gap-2 text-sm font-medium text-rose-600">
-              <Icon icon="mdi:alert-circle-outline" className="h-4 w-4" />
-              منطقه خطر
-            </p>
-            <p className="mt-2 text-xs leading-5 text-black/50">
-              حذف این محصول از فروشگاه، آن را از دید مشتریان و لیست محصولات حذف می‌کند.
-            </p>
-            <button
-              type="button"
-              disabled={deleting}
-              onClick={handleDelete}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100 disabled:opacity-60"
-            >
-              {deleting ? (
-                <Icon icon="mdi:loading" className="h-4 w-4 animate-spin" />
-              ) : (
-                <Icon icon="mdi:trash-can-outline" className="h-4 w-4" />
-              )}
-              {deleting ? 'در حال حذف...' : 'حذف محصول'}
-            </button>
-          </div>
-        </div>
-
-        {/* Right column: editable fields */}
-        <div className="space-y-5 lg:col-span-2">
-          <div className="rounded-lg border border-black/10 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-[#1A1B23]">اطلاعات پایه</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <Field label="نام محصول" error={errors.name}>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          {/* Main column */}
+          <div className="space-y-5 lg:col-span-2">
+            {/* Basic info */}
+            <div className="rounded-lg border border-black/10 bg-white p-5">
+              <h2 className="mb-4 text-sm font-bold text-[#1A1B23]">اطلاعات پایه</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>نام محصول</label>
                   <input
                     value={form.name}
-                    onChange={(e) => update('name', e.target.value)}
-                    className={inputClass(errors.name)}
+                    onChange={(e) => updateField('name', e.target.value)}
+                    className={inputClass}
+                    required
                   />
-                </Field>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>دسته‌بندی</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => updateField('category', e.target.value)}
+                      className={inputClass}
+                    >
+                      {CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>برند</label>
+                    <input
+                      value={form.brand}
+                      onChange={(e) => updateField('brand', e.target.value)}
+                      className={inputClass}
+                      placeholder="اختیاری"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>توضیح کوتاه</label>
+                  <input
+                    value={form.shortDescription}
+                    onChange={(e) => updateField('shortDescription', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>توضیحات کامل</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    rows={5}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>برچسب‌ها (با کاما جدا کنید)</label>
+                  <input
+                    value={form.tags}
+                    onChange={(e) => updateField('tags', e.target.value)}
+                    className={inputClass}
+                    placeholder="مثال: تابستانی, پنبه‌ای, جدید"
+                  />
+                </div>
               </div>
-
-              <Field label="دسته‌بندی">
-                <select
-                  value={form.category}
-                  onChange={(e) => update('category', e.target.value)}
-                  className={inputClass()}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="کد محصول (SKU)" error={errors.sku}>
-                <input
-                  dir="ltr"
-                  value={form.sku}
-                  onChange={(e) => update('sku', e.target.value)}
-                  className={inputClass(errors.sku)}
-                />
-              </Field>
             </div>
 
-            <div className="mt-4">
-              <Field label="توضیحات محصول">
-                <textarea
-                  value={form.description || ''}
-                  onChange={(e) => update('description', e.target.value)}
-                  rows={4}
-                  className={inputClass() + ' resize-none'}
-                  placeholder="ویژگی‌ها، جنس، ابعاد و سایر توضیحات محصول را بنویسید..."
-                />
-              </Field>
+            {/* Pricing */}
+            <div className="rounded-lg border border-black/10 bg-white p-5">
+              <h2 className="mb-4 text-sm font-bold text-[#1A1B23]">قیمت‌گذاری</h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label className={labelClass}>قیمت (افغانی)</label>
+                  <input
+                    type="number"
+                    value={form.price}
+                    onChange={(e) => updateField('price', e.target.value)}
+                    className={inputClass}
+                    required
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>قیمت قبل از تخفیف</label>
+                  <input
+                    type="number"
+                    value={form.compareAtPrice}
+                    onChange={(e) => updateField('compareAtPrice', e.target.value)}
+                    className={inputClass}
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>قیمت تمام‌شده</label>
+                  <input
+                    type="number"
+                    value={form.costPrice}
+                    onChange={(e) => updateField('costPrice', e.target.value)}
+                    className={inputClass}
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory */}
+            <div className="rounded-lg border border-black/10 bg-white p-5">
+              <h2 className="mb-4 text-sm font-bold text-[#1A1B23]">موجودی</h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className={labelClass}>کد SKU</label>
+                    <input
+                      value={form.sku}
+                      onChange={(e) => updateField('sku', e.target.value)}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>بارکد</label>
+                    <input
+                      value={form.barcode}
+                      onChange={(e) => updateField('barcode', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>موجودی انبار</label>
+                    <input
+                      type="number"
+                      value={form.stock}
+                      onChange={(e) => updateField('stock', e.target.value)}
+                      className={inputClass}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>آستانه کم‌موجودی</label>
+                    <input
+                      type="number"
+                      value={form.lowStockThreshold}
+                      onChange={(e) => updateField('lowStockThreshold', e.target.value)}
+                      className={inputClass}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+                  <label className="flex items-center gap-2 text-sm text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={form.trackInventory}
+                      onChange={(e) => updateField('trackInventory', e.target.checked)}
+                      className="h-4 w-4 rounded border-black/20 text-violet-600 focus:ring-violet-500"
+                    />
+                    پیگیری موجودی
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={form.allowBackorder}
+                      onChange={(e) => updateField('allowBackorder', e.target.checked)}
+                      className="h-4 w-4 rounded border-black/20 text-violet-600 focus:ring-violet-500"
+                    />
+                    اجازه سفارش بدون موجودی
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-black/10 bg-white p-5">
-            <h2 className="mb-4 text-sm font-semibold text-[#1A1B23]">قیمت‌گذاری و موجودی</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Field label="قیمت فروش (تومان)" error={errors.price}>
-                <input
-                  dir="ltr"
-                  type="number"
-                  min="0"
-                  value={form.price}
-                  onChange={(e) => update('price', e.target.value)}
-                  className={inputClass(errors.price)}
-                />
-              </Field>
-
-              <Field label="قیمت قبل از تخفیف" error={errors.compareAtPrice}>
-                <input
-                  dir="ltr"
-                  type="number"
-                  min="0"
-                  value={form.compareAtPrice || ''}
-                  onChange={(e) => update('compareAtPrice', e.target.value)}
-                  className={inputClass(errors.compareAtPrice)}
-                  placeholder="اختیاری"
-                />
-              </Field>
-
-              <Field label="موجودی انبار" error={errors.stock}>
-                <input
-                  dir="ltr"
-                  type="number"
-                  min="0"
-                  value={form.stock}
-                  onChange={(e) => update('stock', e.target.value)}
-                  className={inputClass(errors.stock)}
-                />
-              </Field>
+          {/* Sidebar column */}
+          <div className="space-y-5">
+            {/* Status */}
+            <div className="rounded-lg border border-black/10 bg-white p-5">
+              <h2 className="mb-4 text-sm font-bold text-[#1A1B23]">وضعیت</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>وضعیت انتشار</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => updateField('status', e.target.value)}
+                    className={inputClass}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-black/70">
+                  <input
+                    type="checkbox"
+                    checked={form.featured}
+                    onChange={(e) => updateField('featured', e.target.checked)}
+                    className="h-4 w-4 rounded border-black/20 text-violet-600 focus:ring-violet-500"
+                  />
+                  محصول ویژه
+                </label>
+              </div>
             </div>
 
-            <div className="mt-4 rounded-lg bg-[#F4F5F7] p-3 text-xs text-black/50">
-              پیش‌نمایش قیمت فعلی: <span className="font-semibold text-[#1A1B23]">{formatPreviewPrice(form.price)}</span>
+            {/* Image */}
+            <div className="rounded-lg border border-black/10 bg-white p-5">
+              <h2 className="mb-4 text-sm font-bold text-[#1A1B23]">تصویر محصول</h2>
+              <div className="space-y-3">
+                <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-[#F4F5F7]">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="پیش‌نمایش" className="h-full w-full object-cover" />
+                  ) : (
+                    <Icon icon="mdi:image-outline" className="h-10 w-10 text-black/25" />
+                  )}
+                </div>
+                <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-black/20 px-3 py-2.5 text-sm text-black/60 transition hover:border-violet-400 hover:text-violet-600">
+                  <Icon icon="mdi:upload-outline" className="h-4 w-4" />
+                  تغییر تصویر
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+                <p className="text-center text-xs text-black/35">
+                  در صورت انتخاب نشدن تصویر جدید، تصویر فعلی حفظ می‌شود
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2 rounded-lg border border-black/10 bg-white p-5">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 disabled:opacity-60"
+              >
+                {saving ? (
+                  <>
+                    <Icon icon="mdi:loading" className="h-4 w-4 animate-spin" />
+                    در حال ذخیره...
+                  </>
+                ) : (
+                  <>
+                    <Icon icon="mdi:content-save-outline" className="h-4 w-4" />
+                    ذخیره تغییرات
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/products')}
+                className="rounded-lg border border-black/10 px-4 py-2.5 text-sm font-medium text-black/60 transition hover:bg-black/5"
+              >
+                انصراف
+              </button>
             </div>
           </div>
         </div>
       </form>
     </div>
   )
-}
-
-function Field({ label, error, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-black/60">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-xs text-rose-600">{error}</span>}
-    </label>
-  )
-}
-
-function inputClass(error) {
-  return `w-full rounded-lg border bg-[#F4F5F7] px-3 py-2.5 text-sm text-[#1A1B23] placeholder:text-black/35 focus:outline-none focus:ring-2 ${
-    error
-      ? 'border-rose-300 focus:ring-rose-500/20'
-      : 'border-black/10 focus:border-violet-400 focus:ring-violet-500/20'
-  }`
 }
