@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/auth/me`,
+        `https://areyabazaarapi.vercel.app/api/auth/me`,
         {
           method: "GET",
           headers: {

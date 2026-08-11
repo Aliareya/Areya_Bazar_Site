@@ -283,7 +283,7 @@ function StatusOverlay({ status, redirectMs, t }) {
 ========================================================= */
 
 export default function Register() {
-  const { apiurl } = useApi();
+  const { apiurl , production_api_url } = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
 
@@ -338,7 +338,7 @@ export default function Register() {
     if (!isValid) return;
 
     const isSeller = form.role === "seller";
-    const endpoint = isSeller ? `${apiurl}/auth/seller` : `${apiurl}/auth/buyer`;
+    const endpoint = isSeller ? `${production_api_url}/auth/seller` : `${production_api_url}/auth/buyer`;
 
     const payload = isSeller
       ? {

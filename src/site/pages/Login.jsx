@@ -128,7 +128,7 @@ function StatusOverlay({ status, redirectMs, userName, t }) {
 
 export default function Login() {
   const { login } = useAuth();
-  const { apiurl } = useApi();
+  const { apiurl , production_api_url } = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
 
@@ -173,7 +173,7 @@ export default function Login() {
       return;
     }
 
-    if (!apiurl) {
+    if (!production_api_url) {
       setError("API URL is not configured.");
       return;
     }
@@ -186,7 +186,7 @@ export default function Login() {
     setStatus("loading");
 
     try {
-      const res = await fetch(`${apiurl}/auth/login`, {
+      const res = await fetch(`${production_api_url}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
