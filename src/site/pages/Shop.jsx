@@ -1110,6 +1110,7 @@ export default function Shop() {
           stock: product.stock,
           allowBackorder: product.allowBackorder,
           qty: 1,
+          seller_id : product?.user?.id
         },
       ];
     });

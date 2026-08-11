@@ -183,9 +183,10 @@ export default function Checkout() {
       shippingFee,
       total,
     };
+    console.log(payload)
 
     try {
-      const response = await fetch(`${apiurl}/orders`, {
+      const response = await fetch(`http://localhost:3000/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,7 +1,10 @@
 import React from 'react'
 import { Icon } from '@iconify/react'
+import {useAuth }from "../../context/AuthContext";
 
 function Topbar({setMobileOpen}) {
+    const {user} = useAuth()
+    console.log(user)
     return (
         <header className="sticky top-0 z-20 h-16 flex bg-white shadow-md items-center justify-between gap-4 border-b border-black/[0.06] bg-[#F4F5F7]/90 backdrop-blur px-3 lg:px-5">
             <button
@@ -44,17 +47,18 @@ function Topbar({setMobileOpen}) {
                 {/* User profile */}
                 <button className="flex items-center gap-2 rounded-lg p-1.5 transition bg-gray-200">
                     <img
-                        src="https://i.pravatar.cc/64?img=12"
+                        src={user?.image}
                         alt="پروفایل کاربر"
                         className="h-8 w-8 rounded-full object-cover ring-1 ring-black/10"
                     />
 
                     <div className="hidden text-right sm:block">
                         <p className="text-xs font-semibold text-black/80">
-                            مدیر سیستم
+                           {user?.first_name}
                         </p>
                         <p className="mt-0.5 text-[10px] text-black/40">
-                            Administrator
+                           {user?.role}
+                            
                         </p>
                     </div>
 

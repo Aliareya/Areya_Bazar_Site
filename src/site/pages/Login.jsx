@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useApi } from "../../context/ApiContext";
-import { toast } from "react-toastify";
 
 const loginSchema = yup.object().shape({
   email: yup
@@ -19,8 +18,116 @@ const loginSchema = yup.object().shape({
     .required("Password is required"),
 });
 
+
+function StatusOverlay({ status, redirectMs, userName, t }) {
+  if (!status) return null;
+  const isSuccess = status === "success";
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm">
+      <div className="mx-4 flex w-full max-w-xs flex-col items-center rounded-2xl bg-white px-8 py-9 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="relative flex h-16 w-16 items-center justify-center">
+          {!isSuccess && (
+            <>
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "conic-gradient(#1f5138 0deg, #1f5138 90deg, transparent 90deg, transparent 360deg)",
+                  animation: "login-spin 0.9s linear infinite",
+                }}
+              />
+              <div className="absolute inset-[5px] flex items-center justify-center rounded-full bg-white">
+                <Icon icon="mdi:storefront-outline" className="text-2xl text-[#1f5138]" />
+              </div>
+            </>
+          )}
+
+          {isSuccess && (
+            <svg viewBox="0 0 64 64" className="h-16 w-16" style={{ animation: "login-pop 0.4s ease-out" }}>
+              <circle
+                cx="32"
+                cy="32"
+                r="29"
+                fill="none"
+                stroke="#1f5138"
+                strokeWidth="3"
+                strokeLinecap="round"
+                style={{
+                  strokeDasharray: 182,
+                  strokeDashoffset: 182,
+                  animation: "login-ring 0.5s ease-out forwards",
+                }}
+              />
+              <path
+                d="M20 33.5L28 41.5L44 24.5"
+                fill="none"
+                stroke="#1f5138"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  strokeDasharray: 34,
+                  strokeDashoffset: 34,
+                  animation: "login-check 0.35s ease-out 0.45s forwards",
+                }}
+              />
+            </svg>
+          )}
+        </div>
+
+        <p className="mt-5 text-[15px] font-semibold text-stone-800">
+          {isSuccess
+            ? (userName ? `${t("welcomeBackName") || "Welcome back"}, ${userName}!` : t("welcomeBack") || "Welcome back!")
+            : t("loggingIn") || "Signing you in"}
+        </p>
+        <p className="mt-1 text-center text-xs text-stone-500">
+          {isSuccess
+            ? t("loginSuccessSubtitle") || "You're logged in. Taking you to the homepage..."
+            : "Just a moment, checking your details."}
+        </p>
+
+        {!isSuccess && (
+          <div className="mt-4 flex items-center gap-1.5">
+            {[0, 0.15, 0.3].map((delay, i) => (
+              <span
+                key={i}
+                className="h-1.5 w-1.5 rounded-full bg-[#1f5138]"
+                style={{ animation: "login-bounce 1s ease-in-out infinite", animationDelay: `${delay}s` }}
+              />
+            ))}
+          </div>
+        )}
+
+        {isSuccess && (
+          <div className="mt-5 h-1 w-full overflow-hidden rounded-full bg-stone-100">
+            <div
+              className="h-full rounded-full bg-[#1f5138]"
+              style={{ animation: `login-progress ${redirectMs}ms linear forwards` }}
+            />
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes login-spin { to { transform: rotate(360deg); } }
+        @keyframes login-bounce {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+          40% { transform: translateY(-6px); opacity: 1; }
+        }
+        @keyframes login-pop {
+          0% { transform: scale(0.7); opacity: 0; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes login-ring { to { stroke-dashoffset: 0; } }
+        @keyframes login-check { to { stroke-dashoffset: 0; } }
+        @keyframes login-progress { from { width: 0%; } to { width: 100%; } }
+      `}</style>
+    </div>
+  );
+}
+
 export default function Login() {
-  const { user, is_login, login, logout } = useAuth();
+  const { login } = useAuth();
   const { apiurl } = useApi();
   const navigate = useNavigate();
   const { t } = useTranslation("auth");
@@ -31,8 +138,13 @@ export default function Login() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // "" | "loading" | "success" — drives the fullscreen overlay below
+  const [status, setStatus] = useState("");
+  const [loggedInName, setLoggedInName] = useState("");
+  const isSubmitting = status !== "";
+  const REDIRECT_MS = 1500;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,12 +173,17 @@ export default function Login() {
       return;
     }
 
+    if (!apiurl) {
+      setError("API URL is not configured.");
+      return;
+    }
+
     const payload = {
       email: form.email.trim().toLowerCase(),
       password: form.password,
     };
 
-    setLoading(true);
+    setStatus("loading");
 
     try {
       const res = await fetch(`${apiurl}/auth/login`, {
@@ -92,17 +209,23 @@ export default function Login() {
         throw new Error(errorMessage);
       }
 
-      if (!data?.token) {
+      // Real API shape: { message, access_token, user }
+      if (!data?.access_token) {
         throw new Error("Access token was not returned");
       }
 
-      if (data?.data) {
-        login(data.data, data.token);
-        toast.success(data.message || "Logged in successfully");
+      if (!data?.user) {
+        throw new Error("User data was not returned");
       }
 
-      navigate("/");
+      login(data.user, data.access_token);
+      setLoggedInName(data.user.first_name || "");
+      setStatus("success");
+
+      // Hold the success message on screen for a beat, then move on.
+      setTimeout(() => navigate("/"), REDIRECT_MS);
     } catch (err) {
+      setStatus("");
       const message =
         err instanceof TypeError
           ? "Could not reach the server. Check your connection and try again."
@@ -110,8 +233,6 @@ export default function Login() {
 
       console.error("Login failed:", err);
       setError(message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -121,6 +242,8 @@ export default function Login() {
 
   return (
     <div className="py-5 flex items-center justify-center bg-gray-100 max-sm:px-3 md:px-5 max-md:px-6 lg:px-10">
+      <StatusOverlay status={status} redirectMs={REDIRECT_MS} userName={loggedInName} t={t} />
+
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-lg overflow-hidden flex">
         {/* ========================= */}
         {/* LEFT IMAGE */}
@@ -171,8 +294,8 @@ export default function Login() {
               placeholder={t("email")}
               value={form.email}
               onChange={handleChange}
-              disabled={loading}
-              className="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[#1f5138]"
+              disabled={isSubmitting}
+              className="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[#1f5138] disabled:opacity-60 disabled:cursor-not-allowed"
             />
 
             {/* PASSWORD */}
@@ -183,15 +306,16 @@ export default function Login() {
                 placeholder={t("password")}
                 value={form.password}
                 onChange={handleChange}
-                disabled={loading}
-                className="w-full border rounded-lg px-4 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#1f5138]"
+                disabled={isSubmitting}
+                className="w-full border rounded-lg px-4 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#1f5138] disabled:opacity-60 disabled:cursor-not-allowed"
               />
 
               {/* Show / Hide Password */}
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-2.5 text-gray-500"
+                disabled={isSubmitting}
+                className="absolute right-3 top-2.5 text-gray-500 disabled:opacity-60"
               >
                 <Icon icon={showPassword ? "mdi:eye-off" : "mdi:eye"} />
               </button>
@@ -200,10 +324,11 @@ export default function Login() {
             {/* LOGIN BUTTON */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#1f5138] text-white py-2 rounded-lg disabled:opacity-60"
+              disabled={isSubmitting}
+              className="w-full bg-[#1f5138] text-white py-2 rounded-lg disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {loading ? t("loggingIn") || "Logging in..." : t("login")}
+              {isSubmitting && <Icon icon="mdi:loading" className="animate-spin text-lg" />}
+              {isSubmitting ? t("loggingIn") || "Logging in..." : t("login")}
             </button>
           </form>
 
@@ -228,7 +353,8 @@ export default function Login() {
             <button
               type="button"
               onClick={() => handleSocialLogin("google")}
-              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50 disabled:opacity-60"
             >
               <Icon icon="logos:google-icon" />
               {t("google")}
@@ -238,7 +364,8 @@ export default function Login() {
             <button
               type="button"
               onClick={() => handleSocialLogin("github")}
-              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50 disabled:opacity-60"
             >
               <Icon icon="mdi:github" />
               {t("github")}
@@ -248,7 +375,8 @@ export default function Login() {
             <button
               type="button"
               onClick={() => handleSocialLogin("facebook")}
-              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 border py-2 rounded-lg hover:bg-gray-50 disabled:opacity-60"
             >
               <Icon icon="mdi:facebook" className="text-blue-600" />
               {t("facebook")}

@@ -6,7 +6,7 @@ import {
 const ApiContext = createContext(null);
 
 export const ApiProvider = ({ children }) => {
-  const apiurl = 'https://areya-bazaar-backend.onrender.com';
+  const apiurl = 'http://localhost:3000/api';
 
   return (
     <ApiContext.Provider value={{apiurl}}>

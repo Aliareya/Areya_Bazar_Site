@@ -11,20 +11,11 @@ import { CartProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { CheckoutProvider } from './context/CheckoutContext'
 
-function ScrollToTop() {
-  const { pathname } = useLocation()
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
-
-  return null
-}
 
 function App() {
   return (
     <BrowserRouter>
-      <ScrollToTop />
 
       <AuthProvider>
         <ApiProvider>

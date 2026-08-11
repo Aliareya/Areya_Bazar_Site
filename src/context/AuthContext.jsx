@@ -13,45 +13,45 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Check authentication when app starts
-const checkAuth = async () => {
-      const token = localStorage.getItem("accessToken");
+  const checkAuth = async () => {
+    const token = localStorage.getItem("accessToken");
 
-      // No token
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    // No token
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const response = await fetch(
-          `https://areya-bazaar-backend.onrender.com/auth/me`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Token is invalid");
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/auth/me`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        const userData = await response.json();
-
-        setUser(userData);
-        setIsLogin(true);
-      } catch (error) {
-        console.log("Authentication failed");
-
-        localStorage.removeItem("accessToken");
-
-        setUser(null);
-        setIsLogin(false);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Token is invalid");
       }
-    };
+
+      const userData = await response.json();
+
+      setUser(userData);
+      setIsLogin(true);
+    } catch (error) {
+      console.log("Authentication failed");
+
+      localStorage.removeItem("accessToken");
+
+      setUser(null);
+      setIsLogin(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     checkAuth();

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Icon } from '@iconify/react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 function Sidebar({ mobileOpen, setMobileOpen }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const {user} = useAuth()
 
     const NAV_ITEMS = [
         { name: 'داشبورد', icon: 'lucide:layout-dashboard', path: '/admin/dashboard' },
@@ -58,13 +60,13 @@ function Sidebar({ mobileOpen, setMobileOpen }) {
                 <div className="px-3 py-4 border-t border-white/10">
                     <div className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-white/[0.05] cursor-pointer">
                         <img
-                            src="https://i.pravatar.cc/64?img=12"
+                            src={user?.image}
                             alt=""
                             className="h-8 w-8 rounded-full ring-1 ring-white/10"
                         />
                         <div className="min-w-0 flex-1">
-                            <p className="text-sm text-white truncate">سارا محمدی</p>
-                            <p className="text-xs text-white/35 truncate">مدیر سیستم</p>
+                            <p className="text-sm text-white truncate">{user?.first_name}</p>
+                            <p className="text-xs text-white/35 truncate">{user?.role}</p>
                         </div>
                         <Icon icon="lucide:log-out" className="h-4 w-4 text-white/40" />
                     </div>
