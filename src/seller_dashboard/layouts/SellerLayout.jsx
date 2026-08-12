@@ -212,13 +212,12 @@ function FullPageLoading() {
 export default function SellerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ✅ فقط از context استفاده کن — بدون useState تکراری
   const { getSellerData, seller, loading } = useSeller();
   const navigate = useNavigate();
-  console.log(seller)
-
+  
   useEffect(() => {
     getSellerData();
+    console.log(seller)
   }, []);
 
   const hasStore = !!seller?.store;

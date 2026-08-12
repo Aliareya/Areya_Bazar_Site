@@ -19,7 +19,7 @@ export const SellerProvider = ({ children }) => {
       }
 
       const response = await fetch(
-        "https://areyabazaarapi.vercel.app/api",
+        "https://areyabazaarapi.vercel.app/api/sellers/dashboard",
         {
           method: "GET",
           headers: {
