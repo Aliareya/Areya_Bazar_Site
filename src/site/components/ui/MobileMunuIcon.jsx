@@ -170,7 +170,7 @@ function MobileMunuIcon() {
                   <div className="flex items-center gap-2">
                     {/* Avatar */}
 
-                    {user?.image ? (<div className="w-7 h-7 rounded-full bg-cover bg-center"
+                    {user?.image ? (<div className="w-10 h-10 rounded-full bg-cover bg-top"
                       style={{ backgroundImage: `url(${user?.image})` }}></div>) : (
                       <Icon icon="mdi:account-circle" className="text-2xl" />
                     )}
@@ -179,7 +179,7 @@ function MobileMunuIcon() {
 
                     <div>
                       <p className="font-semibold">
-                        {user.firstName || user.firstName || "User"}
+                        {user.first_name || "User"}
                       </p>
 
                       <p className="text-sm text-gray-500">

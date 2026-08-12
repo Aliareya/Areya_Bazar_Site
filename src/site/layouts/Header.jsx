@@ -80,7 +80,7 @@ function Header() {
                     <div className="flex max-sm:hidden">
                         <LanguageIcon />
                     </div>
-                    <div className="">
+                    <div className="max-sm:hidden">
                         <ProfileIcon is_login={is_login} />
                     </div>
                     <div className="lg:hidden ">

@@ -137,14 +137,7 @@ function ProfileIcon() {
       >
         {/* User Info */}
         <div className="px-4 py-3 border-b flex items-center gap-4">
-          {profileImage ? (
-            <div
-              className="w-9 h-9 rounded-full bg-gray-200 bg-cover bg-center"
-              style={{ backgroundImage: `url(${profileImage})` }}
-            />
-          ) : (
-            <Icon icon="mdi:account-circle" className="text-3xl" />
-          )}
+          
 
           <div>
             <p className="font-semibold">

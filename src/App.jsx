@@ -10,6 +10,7 @@ import { ApiProvider } from './context/ApiContext'
 import { CartProvider } from './context/CartContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { CheckoutProvider } from './context/CheckoutContext'
+import { SellerProvider } from './context/SellerContext'
 
 
 
@@ -19,6 +20,7 @@ function App() {
 
       <AuthProvider>
         <ApiProvider>
+          <SellerProvider>
           <CartProvider>
             <WishlistProvider>
               <CheckoutProvider>
@@ -35,6 +37,7 @@ function App() {
               </CheckoutProvider>
             </WishlistProvider>
           </CartProvider>
+          </SellerProvider>
         </ApiProvider>
       </AuthProvider>
     </BrowserRouter>
