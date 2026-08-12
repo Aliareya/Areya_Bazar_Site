@@ -101,6 +101,31 @@ function MobileMunuIcon() {
     },
   ];
 
+  const handleClickprofilemenu = (path, name) => {
+    console.log(user)
+    if (name === "logout") {
+      handleLogout();
+      setOpen(false);
+      setProfileOpen(false);
+      return;
+    }
+
+    if (user.role === "admin") {
+      navigate(`/admin${path}`)
+      setOpen(false);
+      setProfileOpen(false);
+      return
+    }
+
+    if (user.role === "seller") {
+      navigate(`/seller${path}`)
+      setOpen(false);
+      setProfileOpen(false);
+      return
+    }
+
+  }
+
   useEffect(() => {
     const handleClick = (e) => {
       if (
@@ -136,6 +161,7 @@ function MobileMunuIcon() {
     setProfileOpen(false);
     setOpen(false);
   };
+
 
   return (
     <div className="relative !z-50">
@@ -212,17 +238,7 @@ function MobileMunuIcon() {
                     {usermenu.map((item) => (
                       <button
                         key={item.name}
-                        onClick={() => {
-                          if (item.name === "logout") {
-                            handleLogout();
-                            return;
-                          }
-
-                          navigate(item.url);
-
-                          setOpen(false);
-                          setProfileOpen(false);
-                        }}
+                        onClick={() => { handleClickprofilemenu(item.url, item.name) }}
                         className={`flex items-center gap-2 border-b w-full text-left px-4 py-3 hover:bg-gray-200 ${item.danger ? "text-red-500" : ""
                           }`}
                       >

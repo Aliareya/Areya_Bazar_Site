@@ -8,6 +8,7 @@ import SellerSidebar   from "./SellerSidebar";
 import SellerTopbar    from "./SellerTopbar";
 import CreateStore     from "../pages/CreateStor";
 import { useSeller }   from "../../context/SellerContext";
+import { useAuth } from "../../context/AuthContext";
 
 /* ─────────────────────── No Store Card ──────────────────── */
 function NoStoreCard({ onCreateClick }) {
@@ -212,12 +213,22 @@ function FullPageLoading() {
 export default function SellerLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { getSellerData, seller, loading } = useSeller();
+  const { getSellerData, seller } = useSeller();
   const navigate = useNavigate();
+
+  const { user, is_login, loading, checkAuth } = useAuth()
+  
+    useEffect(() => {
+      // Wait until the auth check finishes before deciding anything
+      if (loading) return
+  
+      if (!user || user.role !== 'seller') {
+        navigate('/auth/login')
+      }
+    }, [user, loading, navigate])
   
   useEffect(() => {
     getSellerData();
-    console.log(seller)
   }, []);
 
   const hasStore = !!seller?.store;
