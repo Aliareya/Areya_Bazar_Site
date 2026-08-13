@@ -49,7 +49,7 @@ export default function SellerTopbar({ onMenuClick }) {
       {/* User */}
       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
         <div className="">
-          <p className="text-sm font-semibold text-gray-800 leading-tight hidden sm:block">{seller?.first_name}{" "}{seller?.last_name}</p>
+          <p className="text-sm font-semibold text-gray-800 leading-tight max-sm:block">{seller?.first_name}{" "}{seller?.last_name}</p>
         </div>
         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-700 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold select-none shrink-0">
           {seller?.first_name?.charAt(0)}
