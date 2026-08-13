@@ -374,7 +374,7 @@ export default function MyProducts() {
 
   /* ── actions ── */
   const handleAddNew = () => {
-    navigate("/seller/products/create");
+    navigate("/seller/myproducts/create");
   };
 
   const handleEdit = (product) => {
