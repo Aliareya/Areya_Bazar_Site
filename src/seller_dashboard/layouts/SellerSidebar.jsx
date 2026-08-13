@@ -57,6 +57,7 @@ export default function SellerSidebar({
   const navigate = useNavigate()
   const handleClickMenu = (path) => {
     navigate(path)
+    onClose()
     onNav?.();
   }
   const Inner = ({ onNav }) => (
