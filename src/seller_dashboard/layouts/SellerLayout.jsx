@@ -9,6 +9,8 @@ import SellerTopbar    from "./SellerTopbar";
 import CreateStore     from "../pages/CreateStor";
 import { useSeller }   from "../../context/SellerContext";
 import { useAuth } from "../../context/AuthContext";
+import MyProducts from "../pages/products/MyProducts"
+import CreateProduct from "../pages/products/CreateProduct"
 
 /* ─────────────────────── No Store Card ──────────────────── */
 function NoStoreCard({ onCreateClick }) {
@@ -209,43 +211,82 @@ function FullPageLoading() {
   );
 }
 
-/* ─────────────────────── Main Layout ────────────────────── */
 export default function SellerLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [sellerLoading, setSellerLoading]     = useState(true); // ⬅️ لودینگ جدا برای دیتای فروشگاه
+  const [sellerError, setSellerError]         = useState(false);
 
   const { getSellerData, seller } = useSeller();
   const navigate = useNavigate();
 
-  const { user, is_login, loading, checkAuth } = useAuth()
-  
-    useEffect(() => {
-      // Wait until the auth check finishes before deciding anything
-      if (loading) return
-  
-      if (!user || user.role !== 'seller') {
-        navigate('/auth/login')
-      }
-    }, [user, loading, navigate])
-  
+  const { user, is_login, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    getSellerData();
-  }, []);
+    if (authLoading) return;
+
+    if (!user || user.role !== 'seller') {
+      navigate('/auth/login');
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user || user.role !== 'seller') return;
+
+    let cancelled = false;
+
+    const fetchSeller = async () => {
+      setSellerLoading(true);
+      setSellerError(false);
+      try {
+        await getSellerData();
+      } catch (err) {
+        console.error('Failed to load seller data:', err);
+        if (!cancelled) setSellerError(true);
+      } finally {
+        if (!cancelled) setSellerLoading(false);
+      }
+    };
+
+    fetchSeller();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user]);
 
   const hasStore = !!seller?.store;
+  const isLoading = authLoading || sellerLoading; // ⬅️ هر دو لودینگ با هم چک می‌شوند
 
   const handleCreateStore = () => {
     navigate("/seller/createstor");
     setSidebarOpen(false);
   };
 
-  /* ── چه چیزی رندر شود؟ ── */
   const renderContent = () => {
-    // 1️⃣ در حال لودینگ → اسکلتون کامل صفحه
-    if (loading) {
+    if (isLoading) {
       return <FullPageLoading />;
     }
 
-    // 2️⃣ فروشگاه ندارد
+    if (sellerError) {
+      return (
+        <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-140px)]">
+          <div className="text-center space-y-3">
+            <Icon icon="solar:danger-triangle-bold" className="text-red-400 text-3xl mx-auto" />
+            <p className="text-sm font-semibold text-gray-700">
+              مشکلی در دریافت اطلاعات فروشگاه پیش آمد
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs text-emerald-600 font-medium hover:underline"
+            >
+              تلاش مجدد
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (!hasStore) {
       return (
         <Routes>
@@ -257,11 +298,12 @@ export default function SellerLayout() {
       );
     }
 
-    // 3️⃣ فروشگاه دارد → مسیرهای عادی
     return (
       <Routes>
         <Route path="/seller/dashboard"  element={<SellerDashboard />} />
         <Route path="/seller/createstor" element={<CreateStore />} />
+        <Route path="/seller/myproducts" element={<MyProducts />} />
+        <Route path="/seller/myproducts/create" element={<CreateProduct />} />
         {/* سایر مسیرها را اینجا اضافه کنید */}
         <Route path="*" element={<SellerDashboard />} />
       </Routes>

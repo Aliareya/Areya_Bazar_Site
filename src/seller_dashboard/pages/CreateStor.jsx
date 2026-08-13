@@ -1,5 +1,5 @@
 // src/pages/CreateStore.jsx
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import { useSeller } from "../../context/SellerContext";
@@ -10,7 +10,7 @@ const CITIES = [
   "کندز", "غزنی", "بامیان", "پلخمری", "فیض‌آباد",
 ];
 
-const COUNTRIES = ["افغانستان", "ایران", "تاجیکستان", "ازبکستان"];
+const COUNTRIES = ["افغانستان"];
 
 const CATEGORIES = [
   { value: "supermarket", label: "سوپرمارکت",      icon: "solar:cart-large-bold" },
@@ -25,8 +25,11 @@ const CATEGORIES = [
   { value: "other",       label: "سایر",            icon: "solar:box-bold"        },
 ];
 
-const API_URL   = "https://areyabazaarapi.vercel.app/api/stores";
+const API_URL   = "http://localhost:3000/api/stores";
 const TOKEN_KEY = "accessToken";
+const MAX_LOGO_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_LOGO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const REDIRECT_DELAY = 1800; // ms — مدت نمایش پیام موفقیت قبل از ریدایرکت
 
 /* ─────────────────────── reusable field wrapper ──────────── */
 function Field({ label, required, hint, error, children }) {
@@ -50,6 +53,53 @@ function Field({ label, required, hint, error, children }) {
   );
 }
 
+/* ─────────────────────── full-screen loading overlay ─────── */
+function LoadingOverlay({ visible }) {
+  if (!visible) return null;
+  return (
+    <div className="fixed inset-0 z-[60] bg-white/70 backdrop-blur-sm flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4 bg-white rounded-3xl shadow-xl px-10 py-8 border border-gray-100">
+        <div className="relative w-14 h-14">
+          <div className="absolute inset-0 rounded-full border-4 border-emerald-100" />
+          <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+          <Icon
+            icon="solar:shop-bold"
+            className="absolute inset-0 m-auto text-emerald-500 text-lg"
+          />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-bold text-gray-800">در حال ایجاد فروشگاه...</p>
+          <p className="text-xs text-gray-400 mt-1">لطفاً چند لحظه صبر کنید</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── full-screen success overlay ─────── */
+function SuccessOverlay({ visible, storeName }) {
+  if (!visible) return null;
+  return (
+    <div className="fixed inset-0 z-[60] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4 bg-white rounded-3xl shadow-xl px-10 py-9 border border-emerald-100 animate-scaleIn">
+        <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center">
+          <Icon icon="solar:check-circle-bold" className="text-emerald-500 text-4xl animate-popIn" />
+        </div>
+        <div className="text-center">
+          <p className="text-base font-extrabold text-gray-900">فروشگاه با موفقیت ایجاد شد!</p>
+          {storeName && (
+            <p className="text-xs text-gray-400 mt-1">«{storeName}» آماده است</p>
+          )}
+          <p className="text-xs text-emerald-600 mt-3 flex items-center justify-center gap-1.5">
+            <Icon icon="solar:arrow-right-linear" className="text-sm rotate-180" />
+            در حال انتقال به داشبورد...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────── input base classes ──────────────── */
 const inputBase = [
   "w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-800",
@@ -68,8 +118,11 @@ const errorInputClass = "border-red-300 ring-1 ring-red-200 focus:ring-red-200 f
 
 /* ─────────────────────── main component ──────────────────── */
 export default function CreateStore() {
-  const {getSellerData} = useSeller()
-  const navigate =useNavigate()
+  const { getSellerData } = useSeller();
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const errorBannerRef = useRef(null);
+
   const [form, setForm] = useState({
     name:        "",
     description: "",
@@ -80,9 +133,27 @@ export default function CreateStore() {
     category:    "",
   });
 
+  const [logoFile, setLogoFile]         = useState(null);
+  const [logoPreview, setLogoPreview]   = useState(null);
   const [errors, setErrors]             = useState({});
-  const [submitStatus, setSubmitStatus] = useState("idle");
+  const [submitStatus, setSubmitStatus] = useState("idle"); // idle | loading | success | error
   const [apiError, setApiError]         = useState("");
+
+  /* ── auto redirect after success ── */
+  useEffect(() => {
+    if (submitStatus !== "success") return;
+    const timer = setTimeout(() => {
+      navigate("/seller/dashboard");
+    }, REDIRECT_DELAY);
+    return () => clearTimeout(timer);
+  }, [submitStatus, navigate]);
+
+  /* ── scroll to error banner when it appears ── */
+  useEffect(() => {
+    if (submitStatus === "error" && errorBannerRef.current) {
+      errorBannerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [submitStatus]);
 
   /* ── helpers ── */
   const set = (key, val) => {
@@ -99,6 +170,39 @@ export default function CreateStore() {
     }
   };
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_LOGO_TYPES.includes(file.type)) {
+      setErrors((p) => ({ ...p, logo: "فقط فایل‌های JPG، PNG یا WEBP مجاز هستند" }));
+      return;
+    }
+    if (file.size > MAX_LOGO_SIZE) {
+      setErrors((p) => ({ ...p, logo: "حجم لوگو نباید بیشتر از ۵ مگابایت باشد" }));
+      return;
+    }
+
+    setErrors((p) => {
+      const next = { ...p };
+      delete next.logo;
+      return next;
+    });
+
+    setLogoFile(file);
+    setLogoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const removeLogo = () => {
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoFile(null);
+    setLogoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   /* ── frontend validation ── */
   const validate = () => {
     const e = {};
@@ -107,8 +211,8 @@ export default function CreateStore() {
     if (!form.city)               e.city        = "انتخاب شهر الزامی است";
     if (!form.country)            e.country     = "انتخاب کشور الزامی است";
     if (!form.category)           e.category    = "انتخاب دسته‌بندی الزامی است";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+    setErrors((prev) => ({ ...e, ...(prev.logo ? { logo: prev.logo } : {}) }));
+    return Object.keys(e).length === 0 && !errors.logo;
   };
 
   /**
@@ -147,23 +251,25 @@ export default function CreateStore() {
     setErrors({});
 
     try {
-      // ✅ Exact JSON payload matching your API schema
-      const payload = {
-        name:        form.name.trim(),
-        description: form.description.trim(),
-        category:    form.category,
-        city:        form.city,
-        country:     form.country,
-        address:     `${form.city}/${form.country}`,
-      };
+      // ✅ multipart/form-data payload — backend expects field "logo" for the file
+      const formData = new FormData();
+      formData.append("name", form.name.trim());
+      formData.append("description", form.description.trim());
+      formData.append("category", form.category);
+      formData.append("city", form.city);
+      formData.append("country", form.country);
+      formData.append("address", `${form.city}/${form.country}`);
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
 
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization:  `Bearer ${token}`,
+          // Content-Type را عمداً ست نمی‌کنیم؛ مرورگر خودش boundary درست را اضافه می‌کند
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -183,10 +289,9 @@ export default function CreateStore() {
         throw new Error(errData?.message || `خطای سرور: ${response.status}`);
       }
 
+      // موفقیت — به‌روزرسانی seller و نمایش پیام؛ ریدایرکت با useEffect بالا انجام می‌شود
       setSubmitStatus("success");
-      getSellerData()
-      navigate('/seller/dashboard')
-      setTimeout(() => setSubmitStatus("idle"), 4000);
+      getSellerData();
 
     } catch (err) {
       console.error("Store creation failed:", err);
@@ -197,22 +302,22 @@ export default function CreateStore() {
 
   const selectedCat = CATEGORIES.find((c) => c.value === form.category);
   const isLoading   = submitStatus === "loading";
+  const isSuccess   = submitStatus === "success";
+  const isBusy      = isLoading || isSuccess;
 
   /* ─────────────────────── render ─────────────────────── */
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
 
-      {/* ── Success toast ── */}
-      {submitStatus === "success" && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2 text-sm font-medium animate-bounce">
-          <Icon icon="solar:check-circle-bold" className="text-lg" />
-          فروشگاه با موفقیت ایجاد شد!
-        </div>
-      )}
+      <LoadingOverlay visible={isLoading} />
+      <SuccessOverlay visible={isSuccess} storeName={form.name.trim()} />
 
       {/* ── Global error banner ── */}
       {submitStatus === "error" && apiError && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 flex items-start gap-3">
+        <div
+          ref={errorBannerRef}
+          className="bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 flex items-start gap-3 animate-fadeIn"
+        >
           <Icon icon="solar:danger-triangle-bold" className="text-red-500 text-lg shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-red-700">{apiError}</p>
@@ -255,7 +360,7 @@ export default function CreateStore() {
         </div>
         <button
           onClick={() => window.history.back()}
-          disabled={isLoading}
+          disabled={isBusy}
           className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm text-gray-600 hover:bg-gray-50 transition-all font-medium shrink-0 self-start disabled:opacity-50"
         >
           <Icon icon="solar:alt-arrow-right-linear" className="text-sm" />
@@ -265,6 +370,70 @@ export default function CreateStore() {
 
       {/* ── Form ── */}
       <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* ══════ ROW 0 – Logo ══════ */}
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
+            <Icon icon="solar:gallery-bold-duotone" className="text-emerald-600 text-lg" />
+            لوگوی فروشگاه
+          </div>
+
+          <Field error={errors.logo} hint="فرمت‌های مجاز: JPG, PNG, WEBP — حداکثر ۵ مگابایت">
+            <div className="flex items-center gap-4">
+              <div
+                className={[
+                  "w-20 h-20 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden shrink-0 bg-gray-50",
+                  errors.logo ? "border-red-300" : "border-gray-200",
+                ].join(" ")}
+              >
+                {logoPreview ? (
+                  <img src={logoPreview} alt="پیش‌نمایش لوگو" className="w-full h-full object-cover" />
+                ) : (
+                  <Icon icon="solar:shop-bold" className="text-2xl text-gray-300" />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <label
+                    className={[
+                      "cursor-pointer px-4 py-2 rounded-xl border border-gray-200 text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all",
+                      isBusy ? "opacity-50 pointer-events-none" : "",
+                    ].join(" ")}
+                  >
+                    <Icon icon="solar:upload-bold" className="inline-block ml-1.5 text-sm" />
+                    انتخاب لوگو
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleLogoChange}
+                      disabled={isBusy}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {logoFile && (
+                    <button
+                      type="button"
+                      onClick={removeLogo}
+                      disabled={isBusy}
+                      className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
+                    >
+                      <Icon icon="solar:trash-bin-trash-bold" className="text-sm" />
+                      حذف
+                    </button>
+                  )}
+                </div>
+                {logoFile && (
+                  <span className="text-[11px] text-gray-400 truncate max-w-[200px]">
+                    {logoFile.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          </Field>
+        </div>
 
         {/* ══════ ROW 1 – Name + Description ══════ */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-5">
@@ -282,7 +451,7 @@ export default function CreateStore() {
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
                   placeholder="مثال: قلب آسیا بیگ استور"
-                  disabled={isLoading}
+                  disabled={isBusy}
                   className={`${inputBase} pr-10 ${errors.name ? errorInputClass : ""} disabled:opacity-60`}
                 />
               </div>
@@ -296,7 +465,7 @@ export default function CreateStore() {
                   onChange={(e) => set("description", e.target.value.slice(0, 300))}
                   placeholder="توضیح کوتاهی درباره فروشگاه..."
                   rows={3}
-                  disabled={isLoading}
+                  disabled={isBusy}
                   className={`${inputBase} pr-10 resize-none ${errors.description ? errorInputClass : ""} disabled:opacity-60`}
                 />
                 <span className="absolute bottom-2 left-3 text-[10px] text-gray-300">
@@ -321,7 +490,7 @@ export default function CreateStore() {
                 <select
                   value={form.city}
                   onChange={(e) => set("city", e.target.value)}
-                  disabled={isLoading}
+                  disabled={isBusy}
                   className={`${selectBase} pr-10 ${errors.city ? errorInputClass : ""} ${!form.city ? "text-gray-400" : "text-gray-800"} disabled:opacity-60`}
                   style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%239ca3af' d='m7 10l5 5l5-5z'/%3E%3C/svg%3E")` }}
                 >
@@ -337,7 +506,7 @@ export default function CreateStore() {
                 <select
                   value={form.country}
                   onChange={(e) => set("country", e.target.value)}
-                  disabled={isLoading}
+                  disabled={isBusy}
                   className={`${selectBase} pr-10 ${errors.country ? errorInputClass : ""} disabled:opacity-60`}
                   style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%239ca3af' d='m7 10l5 5l5-5z'/%3E%3C/svg%3E")` }}
                 >
@@ -363,7 +532,7 @@ export default function CreateStore() {
                   <button
                     key={cat.value}
                     type="button"
-                    disabled={isLoading}
+                    disabled={isBusy}
                     onClick={() => set("category", cat.value)}
                     className={[
                       "flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl border-2 transition-all duration-150 relative",
@@ -372,7 +541,7 @@ export default function CreateStore() {
                         : errors.category
                           ? "border-red-200 bg-red-50/30 hover:border-red-300"
                           : "border-gray-100 bg-gray-50/50 hover:border-gray-200 hover:bg-gray-50",
-                      isLoading ? "opacity-60 cursor-not-allowed" : "",
+                      isBusy ? "opacity-60 cursor-not-allowed" : "",
                     ].join(" ")}
                   >
                     <div className={[
@@ -417,20 +586,25 @@ export default function CreateStore() {
             <button
               type="button"
               onClick={() => window.history.back()}
-              disabled={isLoading}
+              disabled={isBusy}
               className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-all font-medium disabled:opacity-50"
             >
               انصراف
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isBusy}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#15803d] text-white text-sm hover:bg-[#166534] active:scale-95 transition-all font-semibold shadow-sm shadow-emerald-200 disabled:opacity-70 disabled:cursor-not-allowed min-w-[140px] justify-center"
             >
               {isLoading ? (
                 <>
                   <Icon icon="solar:spinner-bold" className="text-base animate-spin" />
                   <span>در حال ارسال...</span>
+                </>
+              ) : isSuccess ? (
+                <>
+                  <Icon icon="solar:check-circle-bold" className="text-base" />
+                  <span>ایجاد شد</span>
                 </>
               ) : (
                 <>
