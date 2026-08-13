@@ -1,42 +1,102 @@
 // src/pages/seller-dashboard/CreateProduct.jsx
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../../context/ApiContext";
 import { useSeller } from "../../../context/SellerContext";
 
+/* =========================================================
+   STATIC DATA
+========================================================= */
+
 const CATEGORIES = [
-  { value: "supermarket", label: "سوپرمارکت", icon: "solar:cart-large-bold" },
-  { value: "clothes", label: "پوشاک", icon: "solar:t-shirt-bold" },
-  { value: "digital", label: "دیجیتال", icon: "solar:smartphone-bold" },
-  { value: "furniture", label: "مبلمان", icon: "solar:armchair-bold" },
-  { value: "lighting", label: "روشنایی", icon: "solar:lamp-bold" },
-  { value: "home", label: "لوازم خانه", icon: "solar:home-2-bold" },
-  { value: "food", label: "مواد غذایی", icon: "solar:cup-bold" },
-  { value: "beauty", label: "زیبایی و بهداشت", icon: "solar:mirror-bold" },
-  { value: "sports", label: "ورزشی", icon: "solar:dumbbell-bold" },
-  { value: "other", label: "سایر", icon: "solar:box-bold" },
+  {
+    value: "supermarket",
+    label: "سوپرمارکت",
+    icon: "solar:cart-large-bold",
+  },
+  {
+    value: "clothes",
+    label: "پوشاک",
+    icon: "solar:t-shirt-bold",
+  },
+  {
+    value: "digital",
+    label: "دیجیتال",
+    icon: "solar:smartphone-bold",
+  },
+  {
+    value: "furniture",
+    label: "مبلمان",
+    icon: "solar:armchair-bold",
+  },
+  {
+    value: "lighting",
+    label: "روشنایی",
+    icon: "solar:lamp-bold",
+  },
+  {
+    value: "home",
+    label: "لوازم خانه",
+    icon: "solar:home-2-bold",
+  },
+  {
+    value: "food",
+    label: "مواد غذایی",
+    icon: "solar:cup-bold",
+  },
+  {
+    value: "beauty",
+    label: "زیبایی و بهداشت",
+    icon: "solar:mirror-bold",
+  },
+  {
+    value: "sports",
+    label: "ورزشی",
+    icon: "solar:dumbbell-bold",
+  },
+  {
+    value: "other",
+    label: "سایر",
+    icon: "solar:box-bold",
+  },
 ];
 
 const STATUS_OPTIONS = [
-  { value: "active", label: "فعال (قابل فروش)" },
-  { value: "draft", label: "پیش‌نویس (مخفی)" },
-  { value: "archived", label: "بایگانی‌شده" },
+  {
+    value: "active",
+    label: "فعال (قابل فروش)",
+  },
+  {
+    value: "draft",
+    label: "پیش‌نویس (مخفی)",
+  },
+  {
+    value: "archived",
+    label: "بایگانی‌شده",
+  },
 ];
 
 const TOKEN_KEY = "accessToken";
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
 ];
+
 const REDIRECT_DELAY = 1800;
+
+/* =========================================================
+   FIELD
+========================================================= */
 
 function Field({
   label,
-  required,
+  required = false,
   hint,
   error,
   children,
@@ -46,8 +106,11 @@ function Field({
       {label && (
         <label className="text-sm font-semibold text-gray-700 flex items-center gap-1">
           {label}
+
           {required && (
-            <span className="text-red-400 text-xs">*</span>
+            <span className="text-red-400 text-xs">
+              *
+            </span>
           )}
         </label>
       )}
@@ -66,12 +129,17 @@ function Field({
             icon="solar:danger-circle-bold"
             className="text-xs shrink-0"
           />
+
           <span>{error}</span>
         </p>
       )}
     </div>
   );
 }
+
+/* =========================================================
+   LOADING
+========================================================= */
 
 function LoadingOverlay({ visible }) {
   if (!visible) return null;
@@ -81,7 +149,9 @@ function LoadingOverlay({ visible }) {
       <div className="flex flex-col items-center gap-4 bg-white rounded-3xl shadow-xl px-10 py-8 border border-gray-100">
         <div className="relative w-14 h-14">
           <div className="absolute inset-0 rounded-full border-4 border-emerald-100" />
+
           <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+
           <Icon
             icon="solar:box-bold"
             className="absolute inset-0 m-auto text-emerald-500 text-lg"
@@ -92,6 +162,7 @@ function LoadingOverlay({ visible }) {
           <p className="text-sm font-bold text-gray-800">
             در حال ثبت محصول...
           </p>
+
           <p className="text-xs text-gray-400 mt-1">
             لطفاً چند لحظه صبر کنید
           </p>
@@ -100,6 +171,10 @@ function LoadingOverlay({ visible }) {
     </div>
   );
 }
+
+/* =========================================================
+   SUCCESS
+========================================================= */
 
 function SuccessOverlay({
   visible,
@@ -137,6 +212,10 @@ function SuccessOverlay({
   );
 }
 
+/* =========================================================
+   INPUT STYLES
+========================================================= */
+
 const inputBase = [
   "w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-800",
   "placeholder-gray-400 outline-none transition-all duration-150",
@@ -156,6 +235,10 @@ const errorInputClass =
 const chevronBg = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%239ca3af' d='m7 10l5 5l5-5z'/%3E%3C/svg%3E")`,
 };
+
+/* =========================================================
+   TOGGLE
+========================================================= */
 
 function Toggle({
   checked,
@@ -212,18 +295,28 @@ function Toggle({
   );
 }
 
+/* =========================================================
+   MAIN
+========================================================= */
+
 export default function CreateProduct() {
   const navigate = useNavigate();
+
   const { apiurl } = useApi();
-  const {seller} = useSeller()
+
+  const { seller } = useSeller();
 
   const fileInputRef = useRef(null);
   const errorBannerRef = useRef(null);
 
+  /* =======================================================
+     FORM
+  ======================================================= */
+
   const [form, setForm] = useState({
     name: "",
     category: "",
-    brand: seller?.store?.name,
+    brand: "",
     sku: "",
     barcode: "",
     shortDescription: "",
@@ -239,11 +332,23 @@ export default function CreateProduct() {
     featured: false,
   });
 
+  /* =======================================================
+     TAGS
+  ======================================================= */
+
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState([]);
 
+  /* =======================================================
+     IMAGE
+  ======================================================= */
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  /* =======================================================
+     STATUS
+  ======================================================= */
 
   const [errors, setErrors] = useState({});
   const [submitStatus, setSubmitStatus] = useState("idle");
@@ -252,6 +357,39 @@ export default function CreateProduct() {
   const isLoading = submitStatus === "loading";
   const isSuccess = submitStatus === "success";
   const isBusy = isLoading || isSuccess;
+
+  /* =======================================================
+     STORE NAME -> BRAND
+  ======================================================= */
+
+  useEffect(() => {
+    if (seller?.store?.name) {
+      setForm((prev) => ({
+        ...prev,
+        brand: prev.brand || seller.store.name,
+      }));
+    }
+  }, [seller?.store?.name]);
+
+  /* =======================================================
+     ERROR SCROLL
+  ======================================================= */
+
+  useEffect(() => {
+    if (
+      submitStatus === "error" &&
+      errorBannerRef.current
+    ) {
+      errorBannerRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [submitStatus]);
+
+  /* =======================================================
+     SET FORM VALUE
+  ======================================================= */
 
   const set = (key, value) => {
     setForm((prev) => ({
@@ -262,7 +400,10 @@ export default function CreateProduct() {
     setErrors((prev) => {
       if (!prev[key]) return prev;
 
-      const next = { ...prev };
+      const next = {
+        ...prev,
+      };
+
       delete next[key];
 
       return next;
@@ -274,17 +415,26 @@ export default function CreateProduct() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
+  /* =======================================================
+     IMAGE
+  ======================================================= */
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
 
     if (!file) return;
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    if (
+      !ALLOWED_IMAGE_TYPES.includes(
+        file.type
+      )
+    ) {
       setErrors((prev) => ({
         ...prev,
         image:
           "فقط فایل‌های JPG، PNG یا WEBP مجاز هستند",
       }));
+
       return;
     }
 
@@ -294,12 +444,17 @@ export default function CreateProduct() {
         image:
           "حجم تصویر نباید بیشتر از ۵ مگابایت باشد",
       }));
+
       return;
     }
 
     setErrors((prev) => {
-      const next = { ...prev };
+      const next = {
+        ...prev,
+      };
+
       delete next.image;
+
       return next;
     });
 
@@ -327,6 +482,10 @@ export default function CreateProduct() {
     }
   };
 
+  /* =======================================================
+     TAGS
+  ======================================================= */
+
   const addTag = () => {
     const value = tagInput.trim();
 
@@ -337,45 +496,66 @@ export default function CreateProduct() {
       return;
     }
 
-    if (tags.length >= 10) return;
+    if (tags.length >= 10) {
+      return;
+    }
 
-    setTags((prev) => [...prev, value]);
+    setTags((prev) => [
+      ...prev,
+      value,
+    ]);
+
     setTagInput("");
   };
 
-  const handleTagKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
+  const handleTagKeyDown = (event) => {
+    if (
+      event.key === "Enter" ||
+      event.key === ","
+    ) {
+      event.preventDefault();
+
       addTag();
     }
   };
 
   const removeTag = (tag) => {
     setTags((prev) =>
-      prev.filter((item) => item !== tag)
+      prev.filter(
+        (item) => item !== tag
+      )
     );
   };
 
+  /* =======================================================
+     VALIDATION
+  ======================================================= */
+
   const validate = () => {
-    const e = {};
+    const validationErrors = {};
 
     if (!form.name.trim()) {
-      e.name = "نام محصول الزامی است";
+      validationErrors.name =
+        "نام محصول الزامی است";
     }
 
     if (!form.category) {
-      e.category = "انتخاب دسته‌بندی الزامی است";
+      validationErrors.category =
+        "انتخاب دسته‌بندی الزامی است";
     }
 
     if (!form.description.trim()) {
-      e.description =
+      validationErrors.description =
         "توضیحات محصول الزامی است";
     }
 
     if (!form.price) {
-      e.price = "قیمت الزامی است";
-    } else if (Number(form.price) <= 0) {
-      e.price =
+      validationErrors.price =
+        "قیمت الزامی است";
+    } else if (
+      Number(form.price) <= 0
+    ) {
+      validationErrors.price =
         "قیمت باید بیشتر از صفر باشد";
     }
 
@@ -384,74 +564,120 @@ export default function CreateProduct() {
       Number(form.compareAtPrice) <=
         Number(form.price)
     ) {
-      e.compareAtPrice =
+      validationErrors.compareAtPrice =
         "قیمت قبل از تخفیف باید بیشتر از قیمت فعلی باشد";
     }
 
     if (form.trackInventory) {
       if (form.stock === "") {
-        e.stock = "موجودی الزامی است";
-      } else if (Number(form.stock) < 0) {
-        e.stock =
+        validationErrors.stock =
+          "موجودی الزامی است";
+      } else if (
+        Number(form.stock) < 0
+      ) {
+        validationErrors.stock =
           "موجودی نمی‌تواند منفی باشد";
       }
     }
 
     if (!imageFile) {
-      e.image = "تصویر محصول الزامی است";
+      validationErrors.image =
+        "تصویر محصول الزامی است";
     }
 
-    setErrors(e);
+    setErrors(validationErrors);
 
-    return Object.keys(e).length === 0;
+    return (
+      Object.keys(
+        validationErrors
+      ).length === 0
+    );
   };
 
-  const mapBackendErrors = (errData) => {
+  /* =======================================================
+     BACKEND ERROR
+  ======================================================= */
+
+  const mapBackendErrors = (
+    errorData
+  ) => {
     const mapped = {};
 
     if (
-      errData?.errors &&
-      typeof errData.errors === "object"
+      errorData?.errors &&
+      typeof errorData.errors ===
+        "object"
     ) {
-      for (const [key, msgs] of Object.entries(
-        errData.errors
+      for (const [
+        key,
+        messages,
+      ] of Object.entries(
+        errorData.errors
       )) {
-        mapped[key] = Array.isArray(msgs)
-          ? msgs[0]
-          : msgs;
+        mapped[key] =
+          Array.isArray(messages)
+            ? messages[0]
+            : messages;
       }
-    } else if (
-      Array.isArray(errData?.message)
+    }
+
+    if (
+      Array.isArray(
+        errorData?.message
+      )
     ) {
-      errData.message.forEach((item) => {
-        if (item.field && item.message) {
-          mapped[item.field] = item.message;
+      errorData.message.forEach(
+        (item) => {
+          if (
+            item?.field &&
+            item?.message
+          ) {
+            mapped[item.field] =
+              item.message;
+          }
         }
-      });
+      );
     }
 
     return mapped;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  /* =======================================================
+     SUBMIT
+  ======================================================= */
+
+  const handleSubmit = async (
+    event
+  ) => {
+    event.preventDefault();
 
     if (!validate()) {
-      errorBannerRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      errorBannerRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "center",
+        }
+      );
 
       return;
     }
 
-    const token = localStorage.getItem(TOKEN_KEY);
+    /* -----------------------------------------------------
+       GET TOKEN
+    ----------------------------------------------------- */
+
+    const token =
+      localStorage.getItem(
+        TOKEN_KEY
+      );
 
     if (!token) {
       setSubmitStatus("error");
+
       setApiError(
         "نشست شما منقضی شده است. لطفاً دوباره وارد شوید."
       );
+
       return;
     }
 
@@ -460,9 +686,15 @@ export default function CreateProduct() {
     setErrors({});
 
     try {
-      const formData = new FormData();
+      /* ---------------------------------------------------
+         FORMDATA
+      --------------------------------------------------- */
 
-      // Basic
+      const formData =
+        new FormData();
+
+      /* BASIC */
+
       formData.append(
         "name",
         form.name.trim()
@@ -473,21 +705,30 @@ export default function CreateProduct() {
         form.category
       );
 
-      if (form.sku.trim()) {
+      if (form.brand?.trim()) {
+        formData.append(
+          "brand",
+          form.brand.trim()
+        );
+      }
+
+      if (form.sku?.trim()) {
         formData.append(
           "sku",
           form.sku.trim()
         );
       }
 
-      if (form.barcode.trim()) {
+      if (form.barcode?.trim()) {
         formData.append(
           "barcode",
           form.barcode.trim()
         );
       }
 
-      if (form.shortDescription.trim()) {
+      if (
+        form.shortDescription?.trim()
+      ) {
         formData.append(
           "shortDescription",
           form.shortDescription.trim()
@@ -499,7 +740,8 @@ export default function CreateProduct() {
         form.description.trim()
       );
 
-      // Price
+      /* PRICE */
+
       formData.append(
         "price",
         String(form.price)
@@ -508,7 +750,9 @@ export default function CreateProduct() {
       if (form.compareAtPrice) {
         formData.append(
           "compareAtPrice",
-          String(form.compareAtPrice)
+          String(
+            form.compareAtPrice
+          )
         );
       }
 
@@ -519,10 +763,13 @@ export default function CreateProduct() {
         );
       }
 
-      // Inventory
+      /* INVENTORY */
+
       formData.append(
         "trackInventory",
-        String(form.trackInventory)
+        String(
+          form.trackInventory
+        )
       );
 
       if (form.trackInventory) {
@@ -534,17 +781,21 @@ export default function CreateProduct() {
         formData.append(
           "lowStockThreshold",
           String(
-            form.lowStockThreshold || 0
+            form.lowStockThreshold ||
+              0
           )
         );
       }
 
       formData.append(
         "allowBackorder",
-        String(form.allowBackorder)
+        String(
+          form.allowBackorder
+        )
       );
 
-      // Status
+      /* STATUS */
+
       formData.append(
         "status",
         form.status
@@ -555,29 +806,52 @@ export default function CreateProduct() {
         String(form.featured)
       );
 
-      // Tags
-      tags.forEach((tag) => {
-        formData.append("tags", tag);
-      });
+      /* ---------------------------------------------------
+         IMPORTANT:
+         PostgreSQL tags is text[]
+         We send JSON string.
+      --------------------------------------------------- */
 
-      // Image
-      formData.append("image", imageFile);
-
-      const response = await fetch(
-        `https://areyabazaarapi.vercel.app/api/products`,
-        {
-          method: "POST",
-
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: formData,
-        }
+      formData.append(
+        "tags",
+        JSON.stringify(tags)
       );
 
+      /* IMAGE */
+
+      formData.append(
+        "image",
+        imageFile
+      );
+
+      /* ---------------------------------------------------
+         API
+      --------------------------------------------------- */
+
+      const response =
+        await fetch(
+          `https://areyabazaarapi.vercel.app/api/products`,
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            // DO NOT set Content-Type manually
+            body: formData,
+          }
+        );
+
+      /* ---------------------------------------------------
+         ERROR
+      --------------------------------------------------- */
+
       if (!response.ok) {
-        if (response.status === 401) {
+        if (
+          response.status === 401
+        ) {
           localStorage.removeItem(
             TOKEN_KEY
           );
@@ -587,29 +861,44 @@ export default function CreateProduct() {
           );
         }
 
-        const errData = await response
-          .json()
-          .catch(() => null);
+        const errorData =
+          await response
+            .json()
+            .catch(() => null);
 
-        const fieldErrors =
-          mapBackendErrors(errData);
+        const backendErrors =
+          mapBackendErrors(
+            errorData
+          );
 
         if (
-          Object.keys(fieldErrors).length > 0
+          Object.keys(
+            backendErrors
+          ).length > 0
         ) {
-          setErrors(fieldErrors);
-          setSubmitStatus("error");
+          setErrors(
+            backendErrors
+          );
+
+          setSubmitStatus(
+            "error"
+          );
+
           setApiError(
             "لطفاً خطاهای فرم را برطرف کنید."
           );
+
           return;
         }
 
-        const message = Array.isArray(
-          errData?.message
-        )
-          ? errData.message.join(", ")
-          : errData?.message;
+        const message =
+          Array.isArray(
+            errorData?.message
+          )
+            ? errorData.message.join(
+                ", "
+              )
+            : errorData?.message;
 
         throw new Error(
           message ||
@@ -617,17 +906,28 @@ export default function CreateProduct() {
         );
       }
 
-      const data = await response.json();
+      /* ---------------------------------------------------
+         SUCCESS
+      --------------------------------------------------- */
+
+      const result =
+        await response
+          .json()
+          .catch(() => null);
 
       console.log(
         "Product created:",
-        data
+        result
       );
 
-      setSubmitStatus("success");
+      setSubmitStatus(
+        "success"
+      );
 
       setTimeout(() => {
-        navigate("/seller/myproducts");
+        navigate(
+          "/seller/myproducts"
+        );
       }, REDIRECT_DELAY);
     } catch (error) {
       console.error(
@@ -644,18 +944,40 @@ export default function CreateProduct() {
     }
   };
 
-  const selectedCat = CATEGORIES.find(
-    (c) => c.value === form.category
-  );
+  /* =======================================================
+     SELECTED CATEGORY
+  ======================================================= */
+
+  const selectedCategory =
+    CATEGORIES.find(
+      (item) =>
+        item.value ===
+        form.category
+    );
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
-      <LoadingOverlay visible={isLoading} />
+
+      {/* OVERLAYS */}
+
+      <LoadingOverlay
+        visible={isLoading}
+      />
 
       <SuccessOverlay
         visible={isSuccess}
-        productName={form.name.trim()}
+        productName={
+          form.name.trim()
+        }
       />
+
+      {/* =================================================
+          ERROR BANNER
+      ================================================= */}
 
       {submitStatus === "error" &&
         apiError && (
@@ -665,7 +987,7 @@ export default function CreateProduct() {
           >
             <Icon
               icon="solar:danger-triangle-bold"
-              className="text-red-500 text-lg shrink-0"
+              className="text-red-500 text-lg shrink-0 mt-0.5"
             />
 
             <div className="flex-1">
@@ -673,14 +995,22 @@ export default function CreateProduct() {
                 {apiError}
               </p>
 
-              {Object.keys(errors).length > 0 && (
+              {Object.keys(
+                errors
+              ).length > 0 && (
                 <ul className="mt-2 space-y-1">
-                  {Object.entries(errors).map(
-                    ([key, message]) => (
+                  {Object.entries(
+                    errors
+                  ).map(
+                    ([
+                      key,
+                      message,
+                    ]) => (
                       <li
                         key={key}
-                        className="text-xs text-red-600"
+                        className="text-xs text-red-600 flex items-center gap-1.5"
                       >
+                        <span className="w-1 h-1 rounded-full bg-red-400" />
                         {message}
                       </li>
                     )
@@ -692,7 +1022,10 @@ export default function CreateProduct() {
             <button
               type="button"
               onClick={() => {
-                setSubmitStatus("idle");
+                setSubmitStatus(
+                  "idle"
+                );
+
                 setApiError("");
               }}
               className="text-red-400 hover:text-red-600"
@@ -705,10 +1038,34 @@ export default function CreateProduct() {
           </div>
         )}
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div>
-        <p className="text-xs text-gray-400 mb-1">
-          پنل فروشنده ← محصولات ← افزودن محصول
-        </p>
+        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1.5">
+          <span>
+            پنل فروشنده
+          </span>
+
+          <Icon
+            icon="solar:alt-arrow-left-linear"
+            className="text-[10px]"
+          />
+
+          <span>
+            محصولات
+          </span>
+
+          <Icon
+            icon="solar:alt-arrow-left-linear"
+            className="text-[10px]"
+          />
+
+          <span className="text-gray-700 font-medium">
+            افزودن محصول
+          </span>
+        </div>
 
         <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900">
           افزودن محصول جدید
@@ -719,23 +1076,34 @@ export default function CreateProduct() {
         </p>
       </div>
 
+      {/* =================================================
+          FORM
+      ================================================= */}
+
       <form
-        onSubmit={handleSubmit}
+        onSubmit={
+          handleSubmit
+        }
         className="space-y-5"
       >
-        {/* Image */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+
+        {/* =================================================
+            IMAGE
+        ================================================= */}
+
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
             <Icon
               icon="solar:gallery-bold-duotone"
               className="text-emerald-600 text-lg"
             />
+
             تصویر محصول
           </div>
 
           <Field
             error={errors.image}
-            hint="JPG, PNG, WEBP — حداکثر ۵ مگابایت"
+            hint="فرمت‌های مجاز: JPG, PNG, WEBP — حداکثر ۵ مگابایت"
           >
             <div className="flex items-center gap-4">
               <div
@@ -748,7 +1116,9 @@ export default function CreateProduct() {
               >
                 {imagePreview ? (
                   <img
-                    src={imagePreview}
+                    src={
+                      imagePreview
+                    }
                     alt="preview"
                     className="w-full h-full object-cover"
                   />
@@ -761,19 +1131,33 @@ export default function CreateProduct() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="cursor-pointer px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <label
+                  className={[
+                    "cursor-pointer px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50",
+                    isBusy
+                      ? "opacity-50 pointer-events-none"
+                      : "",
+                  ].join(" ")}
+                >
                   <Icon
                     icon="solar:upload-bold"
                     className="inline-block ml-1"
                   />
+
                   انتخاب تصویر
 
                   <input
-                    ref={fileInputRef}
+                    ref={
+                      fileInputRef
+                    }
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageChange}
-                    disabled={isBusy}
+                    onChange={
+                      handleImageChange
+                    }
+                    disabled={
+                      isBusy
+                    }
                     className="hidden"
                   />
                 </label>
@@ -781,9 +1165,13 @@ export default function CreateProduct() {
                 {imageFile && (
                   <button
                     type="button"
-                    onClick={removeImage}
-                    disabled={isBusy}
-                    className="text-xs text-red-500"
+                    onClick={
+                      removeImage
+                    }
+                    disabled={
+                      isBusy
+                    }
+                    className="text-xs text-red-500 text-right"
                   >
                     حذف تصویر
                   </button>
@@ -791,7 +1179,9 @@ export default function CreateProduct() {
 
                 {imageFile && (
                   <span className="text-[11px] text-gray-400 max-w-[220px] truncate">
-                    {imageFile.name}
+                    {
+                      imageFile.name
+                    }
                   </span>
                 )}
               </div>
@@ -799,9 +1189,14 @@ export default function CreateProduct() {
           </Field>
 
           <Toggle
-            checked={form.featured}
-            onChange={(v) =>
-              set("featured", v)
+            checked={
+              form.featured
+            }
+            onChange={(value) =>
+              set(
+                "featured",
+                value
+              )
             }
             disabled={isBusy}
             icon="solar:star-bold"
@@ -810,11 +1205,19 @@ export default function CreateProduct() {
           />
         </div>
 
-        {/* Basic */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
-          <h2 className="text-sm font-bold text-gray-800">
+        {/* =================================================
+            BASIC INFO
+        ================================================= */}
+
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-5">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
+            <Icon
+              icon="solar:box-bold-duotone"
+              className="text-emerald-600 text-lg"
+            />
+
             اطلاعات پایه
-          </h2>
+          </div>
 
           <Field
             label="نام محصول"
@@ -824,157 +1227,259 @@ export default function CreateProduct() {
             <input
               type="text"
               value={form.name}
-              onChange={(e) =>
-                set("name", e.target.value)
+              onChange={(event) =>
+                set(
+                  "name",
+                  event.target.value
+                )
               }
               disabled={isBusy}
-              className={`${inputBase} ${
+              className={[
+                inputBase,
                 errors.name
                   ? errorInputClass
-                  : ""
-              }`}
-              placeholder="مثال: کفش ورزشی نایک"
+                  : "",
+              ].join(" ")}
+              placeholder="مثال: لپ تاپ HP 15"
             />
           </Field>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             <Field
               label="دسته‌بندی"
               required
               error={errors.category}
             >
               <select
-                value={form.category}
-                onChange={(e) =>
+                value={
+                  form.category
+                }
+                onChange={(event) =>
                   set(
                     "category",
-                    e.target.value
+                    event.target.value
                   )
                 }
                 disabled={isBusy}
-                className={`${selectBase} ${
+                className={[
+                  selectBase,
                   errors.category
                     ? errorInputClass
-                    : ""
-                }`}
-                style={chevronBg}
+                    : "",
+                ].join(" ")}
+                style={
+                  chevronBg
+                }
               >
                 <option value="">
                   انتخاب دسته‌بندی
                 </option>
 
-                {CATEGORIES.map((item) => (
-                  <option
-                    key={item.value}
-                    value={item.value}
-                  >
-                    {item.label}
-                  </option>
-                ))}
+                {CATEGORIES.map(
+                  (item) => (
+                    <option
+                      key={
+                        item.value
+                      }
+                      value={
+                        item.value
+                      }
+                    >
+                      {
+                        item.label
+                      }
+                    </option>
+                  )
+                )}
               </select>
             </Field>
 
+            <Field
+              label="برند"
+              hint="پیش‌فرض نام فروشگاه"
+            >
+              <input
+                type="text"
+                value={
+                  form.brand
+                }
+                disabled
+                className={inputBase}
+              />
+            </Field>
           </div>
 
-          {selectedCat && (
-            <div className="text-xs bg-emerald-50 text-emerald-700 rounded-xl p-3">
-              دسته‌بندی «{selectedCat.label}» انتخاب شد
+          {selectedCategory && (
+            <div className="text-xs bg-emerald-50 text-emerald-700 rounded-xl p-3 flex items-center gap-2">
+              <Icon
+                icon={
+                  selectedCategory.icon
+                }
+                className="text-emerald-500"
+              />
+
+              دسته‌بندی
+              <strong>
+                «
+                {
+                  selectedCategory.label
+                }
+                »
+              </strong>
+              انتخاب شد
             </div>
           )}
 
           <Field
             label="توضیح کوتاه"
-            error={errors.shortDescription}
+            error={
+              errors.shortDescription
+            }
+            hint="حداکثر ۱۵۰ کاراکتر"
           >
             <input
               type="text"
               maxLength={150}
-              value={form.shortDescription}
-              onChange={(e) =>
+              value={
+                form.shortDescription
+              }
+              onChange={(event) =>
                 set(
                   "shortDescription",
-                  e.target.value
+                  event.target.value
                 )
               }
               disabled={isBusy}
-              className={inputBase}
+              className={
+                inputBase
+              }
+              placeholder="مثلاً لپ تاپ قدرتمند برای کار و تحصیل"
             />
           </Field>
 
           <Field
             label="توضیحات کامل"
             required
-            error={errors.description}
+            error={
+              errors.description
+            }
+            hint="حداکثر ۵۰۰ کاراکتر"
           >
             <textarea
               rows={4}
               maxLength={500}
-              value={form.description}
-              onChange={(e) =>
+              value={
+                form.description
+              }
+              onChange={(event) =>
                 set(
                   "description",
-                  e.target.value
+                  event.target.value
                 )
               }
               disabled={isBusy}
               className={`${inputBase} resize-none`}
+              placeholder="مشخصات و توضیحات کامل محصول..."
             />
+
+            <p className="text-[10px] text-gray-300 text-left">
+              {
+                form.description
+                  .length
+              }
+              /500
+            </p>
           </Field>
 
-          <Field label="برچسب‌ها">
-            <div
-              className={`${inputBase} flex flex-wrap gap-1.5 min-h-[44px]`}
-            >
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-lg"
-                >
-                  {tag}
+          {/* TAGS */}
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      removeTag(tag)
-                    }
-                    className="mr-1"
+          <Field
+            label="برچسب‌ها"
+            hint="Enter یا کاما برای اضافه‌کردن"
+          >
+            <div
+              className={`${inputBase} flex flex-wrap items-center gap-1.5 min-h-[44px]`}
+            >
+              {tags.map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-lg"
                   >
-                    ×
-                  </button>
-                </span>
-              ))}
+                    {tag}
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeTag(
+                          tag
+                        )
+                      }
+                      disabled={
+                        isBusy
+                      }
+                      className="text-emerald-500"
+                    >
+                      <Icon
+                        icon="solar:close-circle-bold"
+                        className="text-xs"
+                      />
+                    </button>
+                  </span>
+                )
+              )}
 
               <input
                 type="text"
-                value={tagInput}
-                onChange={(e) =>
-                  setTagInput(e.target.value)
+                value={
+                  tagInput
+                }
+                onChange={(event) =>
+                  setTagInput(
+                    event.target
+                      .value
+                  )
                 }
                 onKeyDown={
                   handleTagKeyDown
                 }
-                onBlur={addTag}
-                disabled={
-                  isBusy || tags.length >= 10
+                onBlur={
+                  addTag
                 }
-                className="flex-1 bg-transparent outline-none text-sm"
+                disabled={
+                  isBusy ||
+                  tags.length >=
+                    10
+                }
                 placeholder={
-                  tags.length === 0
-                    ? "مثال: پرفروش"
+                  tags.length ===
+                  0
+                    ? "مثلاً لپ تاپ، HP"
                     : ""
                 }
+                className="flex-1 min-w-[120px] bg-transparent outline-none text-sm"
               />
             </div>
           </Field>
         </div>
 
-        {/* Price */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
-          <h2 className="text-sm font-bold text-gray-800">
+        {/* =================================================
+            PRICING
+        ================================================= */}
+
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-5">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
+            <Icon
+              icon="solar:wallet-money-bold-duotone"
+              className="text-emerald-600 text-lg"
+            />
+
             قیمت‌گذاری
-          </h2>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
             <Field
               label="قیمت فروش"
               required
@@ -983,35 +1488,49 @@ export default function CreateProduct() {
               <input
                 type="number"
                 min="0"
-                value={form.price}
-                onChange={(e) =>
-                  set("price", e.target.value)
+                value={
+                  form.price
+                }
+                onChange={(event) =>
+                  set(
+                    "price",
+                    event.target
+                      .value
+                  )
                 }
                 disabled={isBusy}
-                className={`${inputBase} ${
+                className={[
+                  inputBase,
                   errors.price
                     ? errorInputClass
-                    : ""
-                }`}
+                    : "",
+                ].join(" ")}
               />
             </Field>
 
             <Field
               label="قیمت قبل از تخفیف"
-              error={errors.compareAtPrice}
+              error={
+                errors.compareAtPrice
+              }
             >
               <input
                 type="number"
                 min="0"
-                value={form.compareAtPrice}
-                onChange={(e) =>
+                value={
+                  form.compareAtPrice
+                }
+                onChange={(event) =>
                   set(
                     "compareAtPrice",
-                    e.target.value
+                    event.target
+                      .value
                   )
                 }
                 disabled={isBusy}
-                className={inputBase}
+                className={
+                  inputBase
+                }
               />
             </Field>
 
@@ -1019,38 +1538,59 @@ export default function CreateProduct() {
               <input
                 type="number"
                 min="0"
-                value={form.costPrice}
-                onChange={(e) =>
+                value={
+                  form.costPrice
+                }
+                onChange={(event) =>
                   set(
                     "costPrice",
-                    e.target.value
+                    event.target
+                      .value
                   )
                 }
                 disabled={isBusy}
-                className={inputBase}
+                className={
+                  inputBase
+                }
               />
             </Field>
+
           </div>
         </div>
 
-        {/* Inventory */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
-          <h2 className="text-sm font-bold text-gray-800">
+        {/* =================================================
+            INVENTORY
+        ================================================= */}
+
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-5">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
+            <Icon
+              icon="solar:box-minimalistic-bold-duotone"
+              className="text-emerald-600 text-lg"
+            />
+
             موجودی و انبار
-          </h2>
+          </div>
 
           <Toggle
-            checked={form.trackInventory}
-            onChange={(v) =>
-              set("trackInventory", v)
+            checked={
+              form.trackInventory
+            }
+            onChange={(value) =>
+              set(
+                "trackInventory",
+                value
+              )
             }
             disabled={isBusy}
             icon="solar:clipboard-list-bold"
             title="ردیابی موجودی"
+            hint="موجودی محصول را کنترل کن"
           />
 
           {form.trackInventory && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
               <Field
                 label="موجودی"
                 required
@@ -1059,15 +1599,20 @@ export default function CreateProduct() {
                 <input
                   type="number"
                   min="0"
-                  value={form.stock}
-                  onChange={(e) =>
+                  value={
+                    form.stock
+                  }
+                  onChange={(event) =>
                     set(
                       "stock",
-                      e.target.value
+                      event.target
+                        .value
                     )
                   }
                   disabled={isBusy}
-                  className={inputBase}
+                  className={
+                    inputBase
+                  }
                 />
               </Field>
 
@@ -1078,52 +1623,75 @@ export default function CreateProduct() {
                   value={
                     form.lowStockThreshold
                   }
-                  onChange={(e) =>
+                  onChange={(event) =>
                     set(
                       "lowStockThreshold",
-                      e.target.value
+                      event.target
+                        .value
                     )
                   }
                   disabled={isBusy}
-                  className={inputBase}
+                  className={
+                    inputBase
+                  }
                 />
               </Field>
+
             </div>
           )}
 
           <Toggle
-            checked={form.allowBackorder}
-            onChange={(v) =>
+            checked={
+              form.allowBackorder
+            }
+            onChange={(value) =>
               set(
                 "allowBackorder",
-                v
+                value
               )
             }
             disabled={isBusy}
             icon="solar:cart-check-bold"
             title="پیش‌فروش بدون موجودی"
+            hint="با موجودی صفر هم سفارش قبول شود"
           />
 
-          <Field label="وضعیت">
+          <Field
+            label="وضعیت محصول"
+            required
+          >
             <select
-              value={form.status}
-              onChange={(e) =>
+              value={
+                form.status
+              }
+              onChange={(event) =>
                 set(
                   "status",
-                  e.target.value
+                  event.target
+                    .value
                 )
               }
               disabled={isBusy}
-              className={selectBase}
-              style={chevronBg}
+              className={
+                selectBase
+              }
+              style={
+                chevronBg
+              }
             >
               {STATUS_OPTIONS.map(
                 (item) => (
                   <option
-                    key={item.value}
-                    value={item.value}
+                    key={
+                      item.value
+                    }
+                    value={
+                      item.value
+                    }
                   >
-                    {item.label}
+                    {
+                      item.label
+                    }
                   </option>
                 )
               )}
@@ -1131,67 +1699,121 @@ export default function CreateProduct() {
           </Field>
         </div>
 
-        {/* Identifiers */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
-          <h2 className="text-sm font-bold text-gray-800">
+        {/* =================================================
+            IDENTIFIERS
+        ================================================= */}
+
+        <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-100 space-y-5">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b border-gray-100 pb-3">
+            <Icon
+              icon="solar:qr-code-bold-duotone"
+              className="text-emerald-600 text-lg"
+            />
+
             شناسه‌های محصول
-          </h2>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             <Field label="SKU">
               <input
                 type="text"
-                value={form.sku}
-                onChange={(e) =>
-                  set("sku", e.target.value)
+                value={
+                  form.sku
+                }
+                onChange={(event) =>
+                  set(
+                    "sku",
+                    event.target
+                      .value
+                  )
                 }
                 disabled={isBusy}
-                className={inputBase}
+                className={
+                  inputBase
+                }
+                placeholder="مثال: HP-15-2026"
               />
             </Field>
 
             <Field label="بارکد">
               <input
                 type="text"
-                value={form.barcode}
-                onChange={(e) =>
+                value={
+                  form.barcode
+                }
+                onChange={(event) =>
                   set(
                     "barcode",
-                    e.target.value
+                    event.target
+                      .value
                   )
                 }
                 disabled={isBusy}
-                className={inputBase}
+                className={
+                  inputBase
+                }
+                placeholder="8901234567890"
               />
             </Field>
+
           </div>
         </div>
 
-        {/* Submit */}
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              window.history.back()
-            }
-            disabled={isBusy}
-            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600"
-          >
-            انصراف
-          </button>
+        {/* =================================================
+            SUBMIT
+        ================================================= */}
 
-          <button
-            type="submit"
-            disabled={isBusy}
-            className="px-6 py-2.5 rounded-xl bg-[#15803d] text-white text-sm font-semibold disabled:opacity-60"
-          >
-            {isLoading
-              ? "در حال ارسال..."
-              : isSuccess
-              ? "ثبت شد"
-              : "ثبت محصول"}
-          </button>
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-[11px] text-gray-400">
+            فیلدهای ستاره‌دار الزامی هستند
+          </p>
+
+          <div className="flex items-center gap-2.5">
+
+            <button
+              type="button"
+              onClick={() =>
+                window.history.back()
+              }
+              disabled={isBusy}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            >
+              انصراف
+            </button>
+
+            <button
+              type="submit"
+              disabled={isBusy}
+              className="px-6 py-2.5 rounded-xl bg-[#15803d] text-white text-sm font-semibold shadow-sm disabled:opacity-60 flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Icon
+                    icon="solar:spinner-bold"
+                    className="animate-spin"
+                  />
+
+                  در حال ارسال...
+                </>
+              ) : isSuccess ? (
+                <>
+                  <Icon icon="solar:check-circle-bold" />
+
+                  ثبت شد
+                </>
+              ) : (
+                <>
+                  <Icon icon="solar:add-circle-bold" />
+
+                  ثبت محصول
+                </>
+              )}
+            </button>
+
+          </div>
         </div>
+
       </form>
     </div>
   );

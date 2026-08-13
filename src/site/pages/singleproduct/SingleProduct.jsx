@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useParams } from "react-router-dom";
-import { useApi } from "../../../context/ApiContext";
 import { useCart } from "../../../context/CartContext";
 
-const API_URL = "http://localhost:3000";
+const API_URL = "https://areyabazaarapi.vercel.app/api/products";
 
 function formatPrice(price) {
   if (price === null || price === undefined) return "N/A";
@@ -69,7 +68,6 @@ function StarRating({ rating = 0, size = 14 }) {
 
 export default function SingleProduct() {
   const { cart, setCart } = useCart();
-  const { apiurl } = useApi();
   const { id } = useParams();
 
   const [product, setProduct] = useState(null);
@@ -80,6 +78,7 @@ export default function SingleProduct() {
   const [activeTab, setActiveTab] = useState("description");
   const [isFavorite, setIsFavorite] = useState(false);
   const [addedMessage, setAddedMessage] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -92,8 +91,9 @@ export default function SingleProduct() {
       try {
         setLoading(true);
         setError("");
+        setActiveImageIndex(0);
 
-        const response = await fetch(`${apiurl}/products/${id}`);
+        const response = await fetch(`${API_URL}/${id}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch product: ${response.status}`);
@@ -101,7 +101,8 @@ export default function SingleProduct() {
 
         const data = await response.json();
 
-        setProduct(data.product);
+        // ✅ API برمی‌گرداند: خودِ محصول مستقیماً (نه { product: {...} })
+        setProduct(data.product ?? data);
       } catch (err) {
         console.error("Error fetching product:", err);
         setError("Unable to load product. Please try again.");
@@ -173,11 +174,21 @@ export default function SingleProduct() {
     allowBackorder,
     status,
     featured,
-    image,
+    images = [],
     createdAt,
     updatedAt,
-    user,
+    store,
   } = product;
+
+  // ✅ فروشنده داخل store.seller.user است
+  const seller = store?.seller;
+  const sellerUser = seller?.user;
+
+  // ✅ لیست تصاویر واقعی، بر اساس sortOrder مرتب‌شده
+  const sortedImages = [...images].sort(
+    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+  );
+  const activeImage = sortedImages[activeImageIndex]?.url;
 
   const discount =
     compareAtPrice && Number(compareAtPrice) > Number(price)
@@ -219,7 +230,7 @@ export default function SingleProduct() {
         {
           id: product.id,
           name,
-          image,
+          image: sortedImages[0]?.url,
           price,
           compareAtPrice,
           sku,
@@ -227,7 +238,9 @@ export default function SingleProduct() {
           category,
           stock,
           trackInventory,
+          allowBackorder,
           qty,
+          seller_id: seller?.id,
         },
       ];
     });
@@ -274,9 +287,9 @@ export default function SingleProduct() {
                 </span>
               )}
 
-              {image ? (
+              {activeImage ? (
                 <img
-                  src={image}
+                  src={activeImage}
                   alt={name}
                   className="h-[500px] w-full object-cover"
                 />
@@ -292,18 +305,41 @@ export default function SingleProduct() {
               )}
             </div>
 
+            {/* ===================== Thumbnails (only if more than 1 image) ===================== */}
+            {sortedImages.length > 1 && (
+              <div className="mt-3 flex items-center gap-2">
+                {sortedImages.map((img, index) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                      index === activeImageIndex
+                        ? "border-[#3f5d45]"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={img.url}
+                      alt={`${name} ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* ===================== Seller ===================== */}
-            {user && (
+            {sellerUser && (
               <div className="mt-5 rounded-xl border border-gray-200 bg-white p-4">
                 <p className="mb-3 text-sm font-medium text-gray-700">
                   Seller
                 </p>
 
                 <div className="flex items-center gap-3">
-                  {user.image ? (
+                  {sellerUser.image ? (
                     <img
-                      src={user.image}
-                      alt={`${user.firstName} ${user.lastName}`}
+                      src={sellerUser.image}
+                      alt={`${sellerUser.first_name} ${sellerUser.last_name}`}
                       className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : (
@@ -319,18 +355,35 @@ export default function SingleProduct() {
 
                   <div>
                     <p className="font-medium text-[#1f2d24]">
-                      {user.firstName} {user.lastName}
+                      {sellerUser.first_name} {sellerUser.last_name}
                     </p>
 
                     <p className="text-sm text-gray-500">
-                      {user.email}
+                      {sellerUser.email}
                     </p>
 
                     <p className="mt-1 text-xs capitalize text-gray-400">
-                      {user.role}
+                      {sellerUser.role}
                     </p>
                   </div>
                 </div>
+
+                {store?.name && (
+                  <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+                    {store.logo ? (
+                      <img
+                        src={store.logo}
+                        alt={store.name}
+                        className="h-8 w-8 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f6f4ef]">
+                        <Icon icon="mdi:store-outline" width={16} height={16} className="text-gray-400" />
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-600">{store.name}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

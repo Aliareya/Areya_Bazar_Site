@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
-import { useApi } from "../../context/ApiContext";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
-const API_URL = "http://localhost:3000/products";
+const API_URL = "https://areyabazaarapi.vercel.app/api/products";
 const PAGE_SIZE = 6;
 
 const FILTER_BG = "#23633a";
@@ -51,14 +50,22 @@ function normalizeTags(tags) {
     .filter(Boolean);
 }
 
-function getSellerName(user) {
+// ✅ فروشنده حالا از product.store.seller.user می‌آید (first_name / last_name)
+function getSellerName(product) {
+  const user = product?.store?.seller?.user;
+
   if (!user) {
     return "Unknown Seller";
   }
 
-  const name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+  const name = `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
   return name || "Unknown Seller";
+}
+
+// ✅ تصویر اصلی محصول از آرایه‌ی images می‌آید
+function getProductImage(product) {
+  return product?.images?.[0]?.url || null;
 }
 
 function SortSelect({ value, onChange, className = "" }) {
@@ -269,9 +276,9 @@ function ProductCard({
 
   const discount = getDiscountPercentage(product);
 
-  const seller = product.user;
+  const sellerName = getSellerName(product);
 
-  const sellerName = getSellerName(seller);
+  const image = getProductImage(product);
 
   return (
     <div className="bg-white cursor-pointer rounded-2xl shadow-md hover:shadow-lg transition-shadow p-3 group">
@@ -330,7 +337,7 @@ function ProductCard({
 
         <img onClick={() => navigate(`/shop/${product.id}`)}
           src={
-            product.image || "https://via.placeholder.com/500x500?text=No+Image"
+            image || "https://via.placeholder.com/500x500?text=No+Image"
           }
           alt={product.name}
           className="w-full h-44 object-cover"
@@ -381,26 +388,25 @@ function ProductCard({
 
       {/* Seller Profile */}
       <div className="flex items-center gap-2.5 mt-4 ">
+        {product?.store?.logo ? (
+          <div
+            className="w-8 h-8 rounded-full bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${product.store.logo})`,
+            }}
+          />
+        ) : (
         <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
-          {seller?.image ? (
-            <img
-              src={seller.image}
-              alt={sellerName}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <Icon icon="mdi:account" className="w-5 h-5 text-gray-400" />
-          )}
+          <Icon icon="mdi:account" className="w-5 h-5 text-gray-400" />
         </div>
+        )}
+
 
         <div className="min-w-0">
           <p className="text-[11px] text-gray-400">Sold by</p>
 
           <p className="text-sm font-medium text-gray-800 truncate">
-            {sellerName}
+            {product?.store?.name ? `${product.store.name} · ${sellerName}` : sellerName}
           </p>
         </div>
       </div>
@@ -677,9 +683,9 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
     return null;
   }
 
-  const seller = product.user;
+  const sellerName = getSellerName(product);
 
-  const sellerName = getSellerName(seller);
+  const image = getProductImage(product);
 
   const inStock = isProductInStock(product);
 
@@ -695,7 +701,7 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
         <div className="relative">
           <img
             src={
-              product.image ||
+              image ||
               "https://via.placeholder.com/500x500?text=No+Image"
             }
             alt={product.name}
@@ -714,21 +720,15 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
           {/* Seller */}
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-              {seller?.image ? (
-                <img
-                  src={seller.image}
-                  alt={sellerName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Icon icon="mdi:account" className="w-6 h-6 text-gray-400" />
-              )}
+              <Icon icon="mdi:account" className="w-6 h-6 text-gray-400" />
             </div>
 
             <div>
               <p className="text-xs text-gray-400">Sold by</p>
 
-              <p className="font-semibold text-gray-800">{sellerName}</p>
+              <p className="font-semibold text-gray-800">
+                {product?.store?.name ? `${product.store.name} · ${sellerName}` : sellerName}
+              </p>
             </div>
           </div>
 
@@ -793,7 +793,6 @@ function QuickViewModal({ product, onClose, onAddToCart }) {
 export default function Shop() {
   const { cart, setCart } = useCart()
   const { isInWishlist, toggleWishlist: toggleWishlistItem } = useWishlist()
-  const { apiurl } = useApi()
   // API
   const [products, setProducts] = useState([]);
 
@@ -841,7 +840,7 @@ export default function Shop() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(`${apiurl}/products`);
+      const response = await fetch(API_URL);
 
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
@@ -1085,6 +1084,8 @@ export default function Shop() {
       return;
     }
 
+    const image = getProductImage(product);
+
     setCart((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
 
@@ -1101,7 +1102,7 @@ export default function Shop() {
         {
           id: product.id,
           name: product.name,
-          image: product.image,
+          image,
           price: product.price,
           compareAtPrice: product.compareAtPrice,
           sku: product.sku,
@@ -1110,7 +1111,7 @@ export default function Shop() {
           stock: product.stock,
           allowBackorder: product.allowBackorder,
           qty: 1,
-          seller_id : product?.user?.id
+          seller_id: product?.store?.seller?.id,
         },
       ];
     });
