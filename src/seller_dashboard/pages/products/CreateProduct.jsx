@@ -627,7 +627,7 @@ export default function CreateProduct() {
       setSubmitStatus("success");
 
       setTimeout(() => {
-        navigate("/seller/dashboard");
+        navigate("/seller/myproducts");
       }, REDIRECT_DELAY);
     } catch (error) {
       console.error(
