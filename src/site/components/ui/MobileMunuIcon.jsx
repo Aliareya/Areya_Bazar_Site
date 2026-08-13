@@ -126,6 +126,13 @@ function MobileMunuIcon() {
 
   }
 
+  const handleAuthClick = (path) => {
+    navigate(`${path}`)
+    setOpen(false);
+    setProfileOpen(false);
+    return
+  }
+
   useEffect(() => {
     const handleClick = (e) => {
       if (
@@ -279,14 +286,14 @@ function MobileMunuIcon() {
           {!loading && !is_login && (
             <div className="flex flex-col gap-2 px-4 pb-3">
               <button
-                onClick={() => navigate("/auth/login")}
+                onClick={() => handleAuthClick("/auth/login")}
                 className="px-4 py-2 w-full text-sm border rounded-md bg-gray-200/50 hover:bg-gray-200"
               >
                 {c("login")}
               </button>
 
               <button
-                onClick={() => navigate("/auth/register")}
+                onClick={() => handleAuthClick("/auth/register")}
                 className="px-4 py-2 w-full text-sm bg-[#1f5138] text-white rounded-md hover:opacity-90"
               >
                 {c("register")}

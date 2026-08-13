@@ -1,6 +1,7 @@
 // src/components/seller-dashboard/Sidebar.jsx
 
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 
 const NAV_ITEMS = [
   {
@@ -8,32 +9,32 @@ const NAV_ITEMS = [
     icon: "solar:widget-5-bold-duotone",
     active: true,
     requiresStore: true,
+    url: '/seller/dashbboard'
   },
   {
     label: "سفارشات",
     icon: "solar:cart-large-bold-duotone",
     badge: "۲۴",
     requiresStore: true,
+    url: '/seller/orders'
   },
   {
     label: "محصولات",
     icon: "solar:box-bold-duotone",
     requiresStore: true,
-  },
-  {
-    label: "فروشگاه‌ها",
-    icon: "solar:shop-bold-duotone",
-    requiresStore: true,
+    url: '/seller/myproducts'
   },
   {
     label: "مشتریان",
     icon: "solar:users-group-rounded-bold-duotone",
     requiresStore: true,
+    url: '/seller/customers'
   },
   {
     label: "تنظیمات",
     icon: "solar:settings-bold-duotone",
     requiresStore: true,
+    url: '/seller/settings'
   },
 
   // این یکی همیشه فعال است
@@ -44,11 +45,20 @@ const NAV_ITEMS = [
   },
 ];
 
+const handleClickMenu = (path) => {
+  navigate(path)
+}
+
 export default function SellerSidebar({
   isOpen,
   onClose,
   hasStore,
 }) {
+  const navigate = useNavigate()
+  const handleClickMenu = (path) => {
+    navigate(path)
+    onNav?.();
+  }
   const Inner = ({ onNav }) => (
     <>
       {/* Brand */}
@@ -97,11 +107,7 @@ export default function SellerSidebar({
 
               disabled={disabled}
 
-              onClick={() => {
-                if (disabled) return;
-
-                onNav?.();
-              }}
+              onClick={() => handleClickMenu(item.url)}
 
               className={[
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150",
@@ -112,10 +118,10 @@ export default function SellerSidebar({
 
                   // فعال ولی inactive
                   : !disabled
-                  ? "text-emerald-200/60 hover:bg-white/10 hover:text-white"
+                    ? "text-emerald-200/60 hover:bg-white/10 hover:text-white"
 
-                  // disabled
-                  : "text-emerald-200/25 cursor-not-allowed opacity-50",
+                    // disabled
+                    : "text-emerald-200/25 cursor-not-allowed opacity-50",
               ].join(" ")}
             >
 
@@ -173,6 +179,7 @@ export default function SellerSidebar({
       </div>
     </>
   );
+
 
 
   return (

@@ -1,119 +1,109 @@
 // src/pages/customer-dashboard/MyProducts.jsx
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
+import { useSeller } from "../../../context/SellerContext";
 
-/* ─────────────────────── static mock data ─────────────────────── */
+/* ─────────────────────── config ─────────────────────── */
+const API_URL = "http://localhost:3000/api/products/myproducts";
+const TOKEN_KEY = "accessToken";
+
 const STATUS_MAP = {
-  delivered:  { label: "تحویل داده شده", color: "emerald", icon: "solar:check-circle-bold" },
-  shipping:   { label: "در حال ارسال",   color: "blue",    icon: "solar:delivery-bold" },
-  processing: { label: "در حال پردازش",  color: "amber",   icon: "solar:clock-circle-bold" },
-  cancelled:  { label: "لغو شده",        color: "red",     icon: "solar:close-circle-bold" },
+  active: { label: "فعال", color: "emerald", icon: "solar:check-circle-bold" },
+  draft: { label: "پیش‌نویس", color: "amber", icon: "solar:pen-new-square-bold" },
+  archived: { label: "بایگانی", color: "gray", icon: "solar:archive-bold" },
 };
-
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: "کفش ورزشی نایک ایر مکس",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop",
-    store: "فروشگاه ورزشی البرز",
-    price: 2450000,
-    quantity: 1,
-    status: "delivered",
-    orderDate: "۱۴۰۴/۰۳/۱۲",
-    orderNumber: "AB-10234",
-  },
-  {
-    id: 2,
-    name: "هدفون بی‌سیم سونی WH-1000XM4",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-    store: "دیجی‌کالای آریا",
-    price: 8900000,
-    quantity: 1,
-    status: "shipping",
-    orderDate: "۱۴۰۴/۰۴/۰۲",
-    orderNumber: "AB-10391",
-  },
-  {
-    id: 3,
-    name: "مبل راحتی سه‌نفره مدل وینتیج",
-    image: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=300&h=300&fit=crop",
-    store: "مبلمان کابل چوب",
-    price: 15200000,
-    quantity: 1,
-    status: "processing",
-    orderDate: "۱۴۰۴/۰۴/۰۸",
-    orderNumber: "AB-10412",
-  },
-  {
-    id: 4,
-    name: "کتری برقی فیلیپس",
-    image: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=300&h=300&fit=crop",
-    store: "لوازم خانگی هرات",
-    price: 1350000,
-    quantity: 2,
-    status: "delivered",
-    orderDate: "۱۴۰۴/۰۲/۲۰",
-    orderNumber: "AB-09876",
-  },
-  {
-    id: 5,
-    name: "پیراهن مردانه کلاسیک",
-    image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300&h=300&fit=crop",
-    store: "پوشاک مزار مد",
-    price: 680000,
-    quantity: 1,
-    status: "cancelled",
-    orderDate: "۱۴۰۴/۰۳/۲۸",
-    orderNumber: "AB-10187",
-  },
-  {
-    id: 6,
-    name: "لپ‌تاپ ایسوس ویووبوک ۱۵",
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&h=300&fit=crop",
-    store: "دیجیتال مارکت قندهار",
-    price: 32500000,
-    quantity: 1,
-    status: "shipping",
-    orderDate: "۱۴۰۴/۰۴/۱۰",
-    orderNumber: "AB-10455",
-  },
-];
-
-const FILTERS = [
-  { value: "all",        label: "همه" },
-  { value: "processing", label: "در حال پردازش" },
-  { value: "shipping",   label: "در حال ارسال" },
-  { value: "delivered",  label: "تحویل شده" },
-  { value: "cancelled",  label: "لغو شده" },
-];
 
 const COLOR_CLASSES = {
   emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  blue:    "bg-blue-50 text-blue-700 border-blue-100",
-  amber:   "bg-amber-50 text-amber-700 border-amber-100",
-  red:     "bg-red-50 text-red-700 border-red-100",
+  amber: "bg-amber-50 text-amber-700 border-amber-100",
+  gray: "bg-gray-100 text-gray-500 border-gray-200",
+  red: "bg-red-50 text-red-700 border-red-100",
 };
 
+const FILTERS = [
+  { value: "all", label: "همه" },
+  { value: "active", label: "فعال" },
+  { value: "draft", label: "پیش‌نویس" },
+  { value: "archived", label: "بایگانی" },
+  { value: "lowstock", label: "موجودی کم" },
+];
+
 /* ─────────────────────── helpers ─────────────────────── */
-const formatPrice = (num) =>
-  num.toLocaleString("fa-IR") + " افغانی";
+const formatPrice = (val) => {
+  const num = Number(val);
+  if (Number.isNaN(num)) return "—";
+  return num.toLocaleString("fa-IR") + " افغانی";
+};
+
+const getMainImage = (product) =>
+  product.images?.[0]?.url ||
+  product.store?.logo ||
+  null;
+
+const isLowStock = (product) =>
+  product.trackInventory &&
+  Number(product.stock) <= Number(product.lowStockThreshold ?? 0);
+
+const isOutOfStock = (product) =>
+  product.trackInventory && Number(product.stock) <= 0;
 
 /* ─────────────────────── status badge ─────────────────────── */
-function StatusBadge({ status }) {
-  const s = STATUS_MAP[status];
+function StatusBadge({ product }) {
+  const s = STATUS_MAP[product.status];
+  const outOfStock = isOutOfStock(product);
+
+  if (outOfStock) {
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${COLOR_CLASSES.red}`}>
+        <Icon icon="solar:close-circle-bold" className="text-sm" />
+        ناموجود
+      </span>
+    );
+  }
   if (!s) return null;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${COLOR_CLASSES[s.color]}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${COLOR_CLASSES[s.color]}`}>
       <Icon icon={s.icon} className="text-sm" />
       {s.label}
     </span>
   );
 }
 
-/* ─────────────────────── delete confirm modal ─────────────────────── */
-function DeleteConfirmModal({ product, onCancel, onConfirm }) {
+/* ─────────────────────── skeleton loading card ─────────────────────── */
+function ProductCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-pulse">
+      <div className="flex gap-4 p-4 sm:p-5">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gray-100 shrink-0" />
+        <div className="flex-1 space-y-2.5 py-1">
+          <div className="h-4 w-3/4 bg-gray-100 rounded-md" />
+          <div className="h-3 w-1/2 bg-gray-100 rounded-md" />
+          <div className="flex gap-2 mt-3">
+            <div className="h-5 w-16 bg-gray-100 rounded-lg" />
+            <div className="h-5 w-14 bg-gray-100 rounded-lg" />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-t border-gray-50 bg-gray-50/50">
+        <div className="h-3 w-24 bg-gray-100 rounded-md" />
+        <div className="h-4 w-20 bg-gray-100 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+function LoadingGrid() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ product, isDeleting, onCancel, onConfirm }) {
   if (!product) return null;
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
@@ -130,15 +120,24 @@ function DeleteConfirmModal({ product, onCancel, onConfirm }) {
         <div className="flex items-center gap-2.5 pt-2">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-all font-medium"
+            disabled={isDeleting}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-all font-medium disabled:opacity-50"
           >
             انصراف
           </button>
           <button
             onClick={() => onConfirm(product.id)}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 active:scale-95 transition-all font-semibold"
+            disabled={isDeleting}
+            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 active:scale-95 transition-all font-semibold disabled:opacity-60"
           >
-            حذف کن
+            {isDeleting ? (
+              <>
+                <Icon icon="solar:spinner-bold" className="animate-spin text-sm" />
+                در حال حذف...
+              </>
+            ) : (
+              "حذف کن"
+            )}
           </button>
         </div>
       </div>
@@ -148,17 +147,35 @@ function DeleteConfirmModal({ product, onCancel, onConfirm }) {
 
 /* ─────────────────────── product card ─────────────────────── */
 function ProductCard({ product, onEdit, onDeleteRequest }) {
+  const image = getMainImage(product);
+  const hasDiscount =
+    product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price);
+  const discountPercent = hasDiscount
+    ? Math.round(((Number(product.compareAtPrice) - Number(product.price)) / Number(product.compareAtPrice)) * 100)
+    : 0;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 group">
       <div className="flex gap-4 p-4 sm:p-5">
         {/* ── Image ── */}
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-gray-100">
+          {image ? (
+            <img
+              src={image}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Icon icon="solar:gallery-bold" className="text-gray-300 text-2xl" />
+            </div>
+          )}
+          {product.featured && (
+            <span className="absolute top-1 right-1 w-5 h-5 rounded-md bg-amber-400 flex items-center justify-center">
+              <Icon icon="solar:star-bold" className="text-white text-[10px]" />
+            </span>
+          )}
         </div>
 
         {/* ── Info ── */}
@@ -189,14 +206,26 @@ function ProductCard({ product, onEdit, onDeleteRequest }) {
             </div>
             <p className="text-[11px] text-gray-400 flex items-center gap-1">
               <Icon icon="solar:shop-2-bold" className="text-xs" />
-              {product.store}
+              {product.store?.name || "—"}
+              {product.brand && (
+                <>
+                  <span className="mx-0.5">·</span>
+                  {product.brand}
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <StatusBadge status={product.status} />
+            <StatusBadge product={product} />
+            {isLowStock(product) && !isOutOfStock(product) && (
+              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-semibold ${COLOR_CLASSES.amber}`}>
+                <Icon icon="solar:danger-triangle-bold" className="text-xs" />
+                موجودی کم
+              </span>
+            )}
             <span className="text-[11px] text-gray-400">
-              تعداد: {product.quantity.toLocaleString("fa-IR")}
+              موجودی: {product.trackInventory ? Number(product.stock).toLocaleString("fa-IR") : "نامحدود"}
             </span>
           </div>
         </div>
@@ -205,24 +234,34 @@ function ProductCard({ product, onEdit, onDeleteRequest }) {
       {/* ── Footer ── */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-t border-gray-50 bg-gray-50/50">
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
-          <span className="flex items-center gap-1">
-            <Icon icon="solar:hashtag-bold" className="text-xs" />
-            {product.orderNumber}
-          </span>
-          <span className="flex items-center gap-1">
-            <Icon icon="solar:calendar-bold" className="text-xs" />
-            {product.orderDate}
-          </span>
+          {product.sku && (
+            <span className="flex items-center gap-1">
+              <Icon icon="solar:hashtag-bold" className="text-xs" />
+              {product.sku}
+            </span>
+          )}
         </div>
-        <span className="text-sm font-extrabold text-gray-800">
-          {formatPrice(product.price)}
-        </span>
+        <div className="flex items-center gap-2">
+          {hasDiscount && (
+            <span className="text-[10px] text-gray-400 line-through">
+              {formatPrice(product.compareAtPrice)}
+            </span>
+          )}
+          <span className="text-sm font-extrabold text-gray-800">
+            {formatPrice(product.price)}
+          </span>
+          {hasDiscount && (
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+              ٪{discountPercent.toLocaleString("fa-IR")}-
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─────────────────────── empty state ─────────────────────── */
+/* ─────────────────────── empty / error states ─────────────────────── */
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -235,55 +274,172 @@ function EmptyState() {
   );
 }
 
+function ErrorState({ message, onRetry }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+        <Icon icon="solar:danger-triangle-bold" className="text-red-400 text-2xl" />
+      </div>
+      <p className="text-sm font-semibold text-gray-700">مشکلی در دریافت محصولات پیش آمد</p>
+      <p className="text-xs text-gray-400 mt-1 max-w-xs">{message}</p>
+      <button
+        onClick={onRetry}
+        className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#15803d] text-white text-xs font-semibold hover:bg-[#166534] transition-all"
+      >
+        <Icon icon="solar:refresh-bold" className="text-sm" />
+        تلاش مجدد
+      </button>
+    </div>
+  );
+}
+
 /* ─────────────────────── main page ─────────────────────── */
 export default function MyProducts() {
-  const [products, setProducts]         = useState(INITIAL_PRODUCTS);
+  const navigate = useNavigate();
+  const { seller } = useSeller();
+  const storeId = seller?.store?.id;
+
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+
   const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  const filteredProducts =
-    activeFilter === "all"
-      ? products
-      : products.filter((p) => p.status === activeFilter);
+  /* ── fetch products ── */
+  const fetchProducts = useCallback(async () => {
+    if (!storeId) {
+      setIsLoading(false);
+      setFetchError("فروشگاهی برای این حساب یافت نشد.");
+      return;
+    }
 
-  const totalSpent = products
-    .filter((p) => p.status !== "cancelled")
-    .reduce((sum, p) => sum + p.price * p.quantity, 0);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      setIsLoading(false);
+      setFetchError("نشست شما منقضی شده است. لطفاً دوباره وارد شوید.");
+      return;
+    }
 
+    setIsLoading(true);
+    setFetchError("");
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ store_id: storeId }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          throw new Error("دسترسی غیرمجاز. لطفاً دوباره وارد شوید.");
+        }
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.message || `خطای سرور: ${response.status}`);
+      }
+
+      const data = await response.json();
+      // API might return array directly or { products: [...] }
+      const list = Array.isArray(data) ? data : data.products || [];
+      setProducts(list);
+    } catch (err) {
+      console.error("Failed to load products:", err);
+      setFetchError(err.message || "مشکلی در ارتباط با سرور پیش آمد");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [storeId]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  /* ── derived data ── */
+  const filteredProducts = products.filter((p) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "lowstock") return isLowStock(p) && !isOutOfStock(p);
+    return p.status === activeFilter;
+  });
+
+  const totalStockValue = products
+    .filter((p) => p.status === "active")
+    .reduce((sum, p) => sum + Number(p.price) * (Number(p.stock) || 0), 0);
+
+  /* ── actions ── */
   const handleAddNew = () => {
-    // TODO: به‌جای alert، ناوبری به صفحه/مودال افزودن محصول
-    alert("رفتن به صفحه‌ی افزودن محصول جدید");
+    navigate("/seller/products/create");
   };
 
   const handleEdit = (product) => {
-    // TODO: به‌جای alert، ناوبری به صفحه/مودال ویرایش با product.id
-    alert(`ویرایش محصول: ${product.name}`);
+    navigate(`/seller/products/${product.id}/edit`);
   };
 
   const handleDeleteRequest = (product) => {
+    setDeleteError("");
     setProductToDelete(product);
   };
 
-  const handleDeleteConfirm = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    setProductToDelete(null);
+  const handleDeleteConfirm = async (id) => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/products/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.message || "حذف محصول با خطا مواجه شد");
+      }
+
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setProductToDelete(null);
+    } catch (err) {
+      console.error("Delete failed:", err);
+      setDeleteError(err.message || "مشکلی در حذف محصول پیش آمد");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
+  /* ─────────────────────── render ─────────────────────── */
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
       {/* ── Delete confirm modal ── */}
       <DeleteConfirmModal
         product={productToDelete}
-        onCancel={() => setProductToDelete(null)}
+        isDeleting={isDeleting}
+        onCancel={() => { setProductToDelete(null); setDeleteError(""); }}
         onConfirm={handleDeleteConfirm}
       />
+
+      {/* ── Delete error toast ── */}
+      {deleteError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-3 flex items-center gap-2.5 animate-fadeIn">
+          <Icon icon="solar:danger-triangle-bold" className="text-red-500 text-base shrink-0" />
+          <p className="text-xs font-medium text-red-700 flex-1">{deleteError}</p>
+          <button onClick={() => setDeleteError("")} className="text-red-400 hover:text-red-600">
+            <Icon icon="solar:close-circle-bold" className="text-base" />
+          </button>
+        </div>
+      )}
 
       {/* ── Page heading ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1.5">
-            <span>حساب کاربری</span>
+            <span>پنل فروشنده</span>
             <Icon icon="solar:alt-arrow-left-linear" className="text-[10px]" />
             <span className="text-gray-700 font-medium">محصولات من</span>
           </div>
@@ -291,7 +447,7 @@ export default function MyProducts() {
             محصولات من
           </h1>
           <p className="text-xs sm:text-sm text-gray-400 mt-1">
-            تاریخچه سفارش‌ها و محصولات خریداری‌شده
+            مدیریت محصولات فروشگاه شما
           </p>
         </div>
 
@@ -301,8 +457,8 @@ export default function MyProducts() {
               <Icon icon="solar:wallet-money-bold" className="text-emerald-600 text-base" />
             </div>
             <div>
-              <p className="text-[10px] text-gray-400">مجموع خرید</p>
-              <p className="text-sm font-extrabold text-gray-800">{formatPrice(totalSpent)}</p>
+              <p className="text-[10px] text-gray-400">ارزش موجودی فعال</p>
+              <p className="text-sm font-extrabold text-gray-800">{formatPrice(totalStockValue)}</p>
             </div>
           </div>
 
@@ -318,40 +474,48 @@ export default function MyProducts() {
       </div>
 
       {/* ── Filter tabs ── */}
-      <div className="flex flex-wrap gap-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-2">
-        {FILTERS.map((f) => {
-          const count =
-            f.value === "all"
-              ? products.length
-              : products.filter((p) => p.status === f.value).length;
-          const active = activeFilter === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setActiveFilter(f.value)}
-              className={[
-                "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-150",
-                active
-                  ? "bg-[#15803d] text-white shadow-sm shadow-emerald-200"
-                  : "text-gray-500 hover:bg-gray-50",
-              ].join(" ")}
-            >
-              {f.label}
-              <span
+      {!isLoading && !fetchError && (
+        <div className="flex flex-wrap gap-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-2">
+          {FILTERS.map((f) => {
+            const count =
+              f.value === "all"
+                ? products.length
+                : f.value === "lowstock"
+                  ? products.filter((p) => isLowStock(p) && !isOutOfStock(p)).length
+                  : products.filter((p) => p.status === f.value).length;
+            const active = activeFilter === f.value;
+            return (
+              <button
+                key={f.value}
+                onClick={() => setActiveFilter(f.value)}
                 className={[
-                  "text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center",
-                  active ? "bg-white/20" : "bg-gray-100 text-gray-400",
+                  "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-150",
+                  active
+                    ? "bg-[#15803d] text-white shadow-sm shadow-emerald-200"
+                    : "text-gray-500 hover:bg-gray-50",
                 ].join(" ")}
               >
-                {count.toLocaleString("fa-IR")}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                {f.label}
+                <span
+                  className={[
+                    "text-[10px] rounded-full px-1.5 py-0.5 min-w-[18px] text-center",
+                    active ? "bg-white/20" : "bg-gray-100 text-gray-400",
+                  ].join(" ")}
+                >
+                  {count.toLocaleString("fa-IR")}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* ── Products list ── */}
-      {filteredProducts.length === 0 ? (
+      {/* ── Content ── */}
+      {isLoading ? (
+        <LoadingGrid />
+      ) : fetchError ? (
+        <ErrorState message={fetchError} onRetry={fetchProducts} />
+      ) : filteredProducts.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">

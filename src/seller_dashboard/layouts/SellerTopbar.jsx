@@ -1,7 +1,9 @@
 // src/components/seller-dashboard/Topbar.jsx
 import { Icon } from "@iconify/react";
+import { useSeller } from "../../context/SellerContext";
 
 export default function SellerTopbar({ onMenuClick }) {
+  const { seller } = useSeller()
   return (
     <header className="bg-white border-b border-gray-200/80 px-4 sm:px-6 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
 
@@ -46,13 +48,12 @@ export default function SellerTopbar({ onMenuClick }) {
 
       {/* User */}
       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-        <div className="text-right">
-          <p className="text-sm font-semibold text-gray-800 leading-tight hidden sm:block">علیرضا محمدی</p>
-          <p className="text-[11px] text-gray-400 mt-0.5 hidden sm:block">مدیر ارشد</p>
-          <p className="text-xs font-semibold text-gray-800 sm:hidden">علیرضا</p>
+        <div className="">
+          <p className="text-sm font-semibold text-gray-800 leading-tight hidden sm:block">{seller?.first_name}{" "}{seller?.last_name}</p>
         </div>
         <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-700 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold select-none shrink-0">
-          عم
+          {seller?.first_name?.charAt(0)}
+          {seller?.last_name?.charAt(0)}
         </div>
       </div>
 
