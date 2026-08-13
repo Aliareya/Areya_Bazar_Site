@@ -564,7 +564,7 @@ export default function CreateProduct() {
       formData.append("image", imageFile);
 
       const response = await fetch(
-        `${apiurl}/products`,
+        `https://areyabazaarapi.vercel.app/api/products`,
         {
           method: "POST",
 

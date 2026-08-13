@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useSeller } from "../../../context/SellerContext";
 
 /* ─────────────────────── config ─────────────────────── */
-const API_URL = "http://localhost:3000/api/products/myproducts";
+const API_URL = "https://areyabazaarapi.vercel.app/api/products/myproducts";
 const TOKEN_KEY = "accessToken";
 
 const STATUS_MAP = {
