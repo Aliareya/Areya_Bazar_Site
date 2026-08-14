@@ -25,7 +25,7 @@ const CATEGORIES = [
   { value: "other",       label: "سایر",            icon: "solar:box-bold"        },
 ];
 
-const API_URL   = "http://localhost:3000/api/stores";
+const API_URL   = "https://areyabazaarapi.vercel.app/api/stores";
 const TOKEN_KEY = "accessToken";
 const MAX_LOGO_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_LOGO_TYPES = ["image/jpeg", "image/png", "image/webp"];
